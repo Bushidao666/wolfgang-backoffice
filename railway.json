@@ -1,0 +1,11 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "RAILPACK",
+    "buildCommand": "bash -lc 'set -euo pipefail; : \"${RAILWAY_SERVICE_DIR:?set RAILWAY_SERVICE_DIR to one of: backoffice-web, backoffice-api, agent-runtime, evolution-manager, autentique-service, facebook-capi}\"; bash \"${RAILWAY_SERVICE_DIR}/railway-build.sh\"'"
+  },
+  "deploy": {
+    "startCommand": "bash -lc 'set -euo pipefail; : \"${RAILWAY_SERVICE_DIR:?set RAILWAY_SERVICE_DIR to one of: backoffice-web, backoffice-api, agent-runtime, evolution-manager, autentique-service, facebook-capi}\"; bash \"${RAILWAY_SERVICE_DIR}/railway-start.sh\"'"
+  }
+}
+

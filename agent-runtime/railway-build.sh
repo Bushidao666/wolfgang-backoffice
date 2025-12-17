@@ -10,5 +10,8 @@ if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
 fi
 
 echo "[agent-runtime] installing python dependencies"
-"${PYTHON_BIN}" -m pip install --upgrade pip
-"${PYTHON_BIN}" -m pip install -r requirements.txt
+VENV_DIR="${VENV_DIR:-.venv}"
+
+"${PYTHON_BIN}" -m venv "${VENV_DIR}"
+"${VENV_DIR}/bin/python" -m pip install --upgrade pip
+"${VENV_DIR}/bin/python" -m pip install -r requirements.txt

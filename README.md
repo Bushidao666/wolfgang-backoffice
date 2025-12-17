@@ -4,21 +4,23 @@ Backoffice multi-tenant para a holding, com arquitetura orientada a eventos (Red
 
 ## Requisitos
 
-- Docker + Docker Compose (v2)
 - Node.js (recomendado: 20+)
 - Python 3.12+
+- Redis (local ou managed)
 
 ## Quick start (desenvolvimento)
 
 1. Configure variáveis:
    - `cp .env.example .env`
 2. Instale dependências:
-   - `npm install`
-3. (Opcional) Suba Supabase local:
-   - `npm install -g supabase`
-   - `supabase start`
-4. Suba os serviços:
-   - `docker compose -f infra/compose/docker-compose.yml up --build`
+   - `npm ci --workspaces --include-workspace-root`
+3. Suba os serviços (em terminais separados):
+   - API: `npm -w @wolfgang/backoffice-api run start:dev`
+   - Web: `npm -w @wolfgang/backoffice-web run dev`
+   - Evolution: `npm -w @wolfgang/evolution-manager run start:dev`
+   - Autentique: `npm -w @wolfgang/autentique-service run start:dev`
+   - Facebook CAPI: `npm -w @wolfgang/facebook-capi run start:dev`
+   - Agent Runtime: `cd agent-runtime && python3 -m pip install -r requirements.txt && python3 -m uvicorn api.main:app --host 0.0.0.0 --port 5000`
 
 ## Dev usando Supabase Cloud (sem Supabase local)
 
@@ -29,12 +31,7 @@ Backoffice multi-tenant para a holding, com arquitetura orientada a eventos (Red
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `SUPABASE_JWT_SECRET`
    - `SUPABASE_DB_URL` (senha do DB)
-3. Suba os serviços:
-   - `docker compose -f infra/compose/docker-compose.yml up --build`
-
-Se o `agent-runtime` cair com `OSError: [Errno 101] Network is unreachable`, seu Docker provavelmente não tem rota IPv6 (o host direto do DB do Supabase é IPv6 por padrão). Use o override:
-
-- `docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.agent-runtime-host.yml up --build`
+3. Suba os serviços (mesmo fluxo do dev acima).
 
 Serviços:
 
@@ -47,18 +44,13 @@ Serviços:
 
 ## Deploy no Railway (monorepo, sem docker-compose)
 
-O Railway sobe cada serviço isolado. Este repo já tem `railway.json` + scripts por serviço (Railpack) para instalar os workspaces no diretório raiz e buildar apenas o app alvo.
-
-Obs.: os arquivos de Docker Compose ficam em `infra/compose/` para evitar o autodetect do Railway.
+O Railway sobe cada serviço isolado. Este repo **não tem Dockerfiles** e usa **Railpack** + scripts `.sh`.
 
 1. Crie **um serviço por app** (6 serviços): `backoffice-web`, `backoffice-api`, `agent-runtime`, `evolution-manager`, `autentique-service`, `facebook-capi`.
-2. Recomendo manter o *Root Directory* no **repo root** (para os workspaces `packages/*` funcionarem).
+2. Use o *Root Directory* no **repo root** (necessário por causa dos `workspaces` em `packages/*`).
 3. Builder: Railpack.
-4. Configure o serviço para usar o manifest do app:
-   - Se sua conta/UI tiver *Service Manifest Path*, selecione o `railway.json` do app (ex.: `backoffice-api/railway.json`).
-   - Caso contrário, configure manualmente os comandos do serviço:
-     - Build: `bash <app>/railway-build.sh`
-     - Start: `bash <app>/railway-start.sh`
+4. Opção mais simples: use `railway.json` da raiz (`railway.json:1`) e configure **uma variável por serviço**:
+   - `RAILWAY_SERVICE_DIR=backoffice-api` (ou `backoffice-web`, `agent-runtime`, etc.)
 5. Adicione um Redis no Railway (plugin) e configure `REDIS_URL` igual para os serviços que usam Redis.
 6. Configure as variáveis por serviço usando os exemplos:
    - `backoffice-web/.env.example`
