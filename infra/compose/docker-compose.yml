@@ -22,7 +22,7 @@ services:
 
   backoffice-api:
     build:
-      context: .
+      context: ../..
       dockerfile: backoffice-api/Dockerfile
     ports:
       - "4000:4000"
@@ -60,7 +60,7 @@ services:
 
   backoffice-web:
     build:
-      context: .
+      context: ../..
       dockerfile: backoffice-web/Dockerfile
     ports:
       - "3000:3000"
@@ -84,7 +84,7 @@ services:
 
   agent-runtime:
     build:
-      context: .
+      context: ../..
       dockerfile: agent-runtime/Dockerfile
     ports:
       - "5000:5000"
@@ -113,7 +113,7 @@ services:
 
   evolution-manager:
     build:
-      context: .
+      context: ../..
       dockerfile: evolution-manager/Dockerfile
     ports:
       - "4001:4001"
@@ -144,7 +144,7 @@ services:
 
   autentique-service:
     build:
-      context: .
+      context: ../..
       dockerfile: autentique-service/Dockerfile
     ports:
       - "4002:4002"
@@ -169,7 +169,7 @@ services:
 
   facebook-capi:
     build:
-      context: .
+      context: ../..
       dockerfile: facebook-capi/Dockerfile
     ports:
       - "4003:4003"
@@ -194,7 +194,7 @@ services:
   prometheus:
     image: prom/prometheus:v2.55.1
     volumes:
-      - ./infra/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
       - "9090:9090"
     command:

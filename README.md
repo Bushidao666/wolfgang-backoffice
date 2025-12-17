@@ -18,7 +18,7 @@ Backoffice multi-tenant para a holding, com arquitetura orientada a eventos (Red
    - `npm install -g supabase`
    - `supabase start`
 4. Suba os serviços:
-   - `docker compose up --build`
+   - `docker compose -f infra/compose/docker-compose.yml up --build`
 
 ## Dev usando Supabase Cloud (sem Supabase local)
 
@@ -30,11 +30,11 @@ Backoffice multi-tenant para a holding, com arquitetura orientada a eventos (Red
    - `SUPABASE_JWT_SECRET`
    - `SUPABASE_DB_URL` (senha do DB)
 3. Suba os serviços:
-   - `docker compose up --build`
+   - `docker compose -f infra/compose/docker-compose.yml up --build`
 
 Se o `agent-runtime` cair com `OSError: [Errno 101] Network is unreachable`, seu Docker provavelmente não tem rota IPv6 (o host direto do DB do Supabase é IPv6 por padrão). Use o override:
 
-- `docker compose -f docker-compose.yml -f docker-compose.agent-runtime-host.yml up --build`
+- `docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.agent-runtime-host.yml up --build`
 
 Serviços:
 
@@ -47,11 +47,13 @@ Serviços:
 
 ## Deploy no Railway (monorepo, sem docker-compose)
 
-O Railway sobe cada serviço isolado. Este repo já tem `railway.json` + scripts por serviço (com Nixpacks) para instalar os workspaces no diretório raiz e buildar apenas o app alvo.
+O Railway sobe cada serviço isolado. Este repo já tem `railway.json` + scripts por serviço (Railpack) para instalar os workspaces no diretório raiz e buildar apenas o app alvo.
+
+Obs.: os arquivos de Docker Compose ficam em `infra/compose/` para evitar o autodetect do Railway.
 
 1. Crie **um serviço por app** (6 serviços): `backoffice-web`, `backoffice-api`, `agent-runtime`, `evolution-manager`, `autentique-service`, `facebook-capi`.
 2. Recomendo manter o *Root Directory* no **repo root** (para os workspaces `packages/*` funcionarem).
-3. Builder: Nixpacks.
+3. Builder: Railpack.
 4. Configure o serviço para usar o manifest do app:
    - Se sua conta/UI tiver *Service Manifest Path*, selecione o `railway.json` do app (ex.: `backoffice-api/railway.json`).
    - Caso contrário, configure manualmente os comandos do serviço:
@@ -67,6 +69,8 @@ O Railway sobe cada serviço isolado. Este repo já tem `railway.json` + scripts
    - `facebook-capi/.env.example`
 
 Nota (Next.js): `NEXT_PUBLIC_*` precisa estar setado **no build** do `backoffice-web` (senão o bundle pode sair com valores vazios).
+
+Nota (Supabase DB): se algum serviço precisar de `SUPABASE_DB_URL` em produção (ex.: `agent-runtime`), use a connection string do **Pooler** no Supabase (IPv4), porque `db.<ref>.supabase.co` costuma ser IPv6-only.
 
 ## Testes
 

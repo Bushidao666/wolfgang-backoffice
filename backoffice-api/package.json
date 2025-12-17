@@ -13,7 +13,7 @@
     "test": "jest --config jest.config.ts",
     "test:watch": "jest --config jest.config.ts --watch",
     "test:cov": "jest --config jest.config.ts --coverage",
-    "test:integration": "npx supabase start --workdir .. --exclude studio --yes && npx supabase db push --workdir .. --local --include-roles && docker compose -f ../docker-compose.yml up -d redis && jest --config test/jest.integration.config.ts",
+    "test:integration": "npx supabase start --workdir .. --exclude studio --yes && npx supabase db push --workdir .. --local --include-roles && docker compose -f ../infra/compose/docker-compose.yml up -d redis && jest --config test/jest.integration.config.ts",
     "test:rls": "npx supabase test db --workdir ..",
     "test:rls:e2e": "npx supabase start --workdir .. --exclude studio --yes && npx supabase db push --workdir .. --local --include-roles && jest --config test/jest.rls.config.ts"
   },

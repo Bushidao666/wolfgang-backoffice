@@ -1,20 +1,9 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS",
-    "nixpacksPlan": {
-      "providers": [],
-      "phases": {
-        "setup": {
-          "nixPkgs": ["nodejs_20"]
-        },
-        "build": {
-          "cmds": [
-            "bash -lc 'if [ -f ./railway-build.sh ]; then bash ./railway-build.sh; else bash backoffice-web/railway-build.sh; fi'"
-          ]
-        }
-      }
-    }
+    "builder": "RAILPACK",
+    "buildCommand": "bash -lc 'if [ -f ./railway-build.sh ]; then bash ./railway-build.sh; else bash backoffice-web/railway-build.sh; fi'",
+    "watchPatterns": ["package.json", "package-lock.json", "packages/**", "backoffice-web/**"]
   },
   "deploy": {
     "startCommand": "bash -lc 'if [ -f ./railway-start.sh ]; then bash ./railway-start.sh; else bash backoffice-web/railway-start.sh; fi'",

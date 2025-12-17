@@ -483,7 +483,7 @@ async function main() {
     execSync("npx supabase start --workdir . --exclude studio --yes", { cwd: repoRoot, stdio: "inherit" });
     execSync("npx supabase db reset --workdir . --local --no-seed --yes", { cwd: repoRoot, stdio: "inherit" });
     await resetDatabase(process.env.SUPABASE_DB_URL);
-    execSync("docker compose -f docker-compose.yml up -d redis", { cwd: repoRoot, stdio: "inherit" });
+    execSync("docker compose -f infra/compose/docker-compose.yml up -d redis", { cwd: repoRoot, stdio: "inherit" });
   } catch (err) {
     console.error("Failed to prepare e2e environment:", err instanceof Error ? err.message : String(err));
     process.exit(1);

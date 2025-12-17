@@ -9,7 +9,7 @@ services:
     ports: []
     extra_hosts: []
     environment:
-      REDIS_URL: ${AGENT_RUNTIME_REDIS_URL:-redis://127.0.0.1:6379}
+      REDIS_URL: ${AGENT_RUNTIME_REDIS_URL:-redis://127.0.0.1:6380}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${AGENT_RUNTIME_OTEL_EXPORTER_OTLP_ENDPOINT:-http://127.0.0.1:4318/v1/traces}
       DISABLE_CONNECTIONS: ${AGENT_RUNTIME_DISABLE_CONNECTIONS:-false}
 

@@ -19,7 +19,7 @@ Este runbook cobre incidentes do **`evolution-manager`**, responsável por integ
 - enviar mensagem real e verificar se evento chega
 
 3) Logs
-- `docker compose logs --tail=200 evolution-manager`
+- `docker compose -f infra/compose/docker-compose.yml logs --tail=200 evolution-manager`
 
 ## Diagnóstico (detalhado)
 
@@ -57,7 +57,7 @@ Se ficar em `qr_ready`:
 ## Mitigação / Recovery
 
 - Reiniciar evolution-manager:
-  - `docker compose restart evolution-manager`
+  - `docker compose -f infra/compose/docker-compose.yml restart evolution-manager`
 - Recriar instância (quando suportado pelo provider)
 - Revalidar credenciais e permissões no Evolution API
 
@@ -67,4 +67,3 @@ Se ficar em `qr_ready`:
 - status da instância e última mudança
 - payloads de webhook (sem PII quando possível)
 - correlação com `correlation_id`
-

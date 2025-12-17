@@ -26,7 +26,7 @@ Este runbook cobre incidentes do serviço **`agent-runtime`** (FastAPI), respons
 - `SUPABASE_DB_URL` e `REDIS_URL` devem existir em produção.
 
 3) Ver logs
-- Local: `docker compose logs --tail=200 agent-runtime`
+- Local: `docker compose -f infra/compose/docker-compose.yml logs --tail=200 agent-runtime`
 - Procurar `request_id`/`correlation_id` e eventos `message_received.*`, `handoff.*`, `rag.*`
 
 ## Diagnóstico (detalhado)
@@ -55,7 +55,7 @@ Com `OPENAI_API_KEY`:
 ## Mitigação / Recovery
 
 - Reiniciar o serviço:
-  - `docker compose restart agent-runtime`
+  - `docker compose -f infra/compose/docker-compose.yml restart agent-runtime`
 - Se DB/Redis instáveis, mitigar primeiro dependências.
 - Reduzir pressão:
   - aumentar pool de DB (`DB_POOL_MAX`)
@@ -70,4 +70,3 @@ Com `OPENAI_API_KEY`:
 ## Escalação
 
 - Incidente P0 se o bot parar de responder para múltiplos tenants.
-

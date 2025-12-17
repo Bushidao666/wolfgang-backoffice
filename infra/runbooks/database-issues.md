@@ -30,7 +30,7 @@ Este runbook cobre incidentes envolvendo **Postgres** (via Supabase), incluindo 
 - `curl -fsS http://localhost:5000/ready` (Agent Runtime)
 
 3) Checar logs
-- Local: `docker compose logs --tail=200 backoffice-api agent-runtime`
+- Local: `docker compose -f infra/compose/docker-compose.yml logs --tail=200 backoffice-api agent-runtime`
 - Supabase (remoto): usar logs do projeto (Dashboard)
 
 ## Diagnóstico (detalhado)
@@ -89,7 +89,7 @@ Checklist:
 ## Mitigação / Recovery
 
 - Reiniciar serviços consumidores se a conexão ficou “presa”:
-  - local: `docker compose restart backoffice-api agent-runtime`
+  - local: `docker compose -f infra/compose/docker-compose.yml restart backoffice-api agent-runtime`
 - Reaplicar migrações (local):
   - `npx supabase db push --workdir . --local --include-roles`
 - Em produção: escalar/mitigar com read replicas, aumentar pool, e aplicar mudanças com janela.
@@ -105,4 +105,3 @@ Checklist:
 
 - Se não houver recuperação em 15 minutos: acionar responsável de infra/DBA
 - Se o impacto for multi-tenant (RLS vazando ou bloqueando): incident P0
-

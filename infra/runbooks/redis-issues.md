@@ -17,16 +17,16 @@ Este runbook cobre incidentes envolvendo **Redis**, usado para **Pub/Sub** (even
 ## Triage (5 minutos)
 
 1) Verificar Redis responde
-- Local: `redis-cli -h localhost -p 6379 ping`
+- Local: `redis-cli -h localhost -p ${REDIS_HOST_PORT:-6380} ping`
 
 2) Verificar containers/logs
-- `docker compose ps`
-- `docker compose logs --tail=200 redis`
+- `docker compose -f infra/compose/docker-compose.yml ps`
+- `docker compose -f infra/compose/docker-compose.yml logs --tail=200 redis`
 
 3) Verificar fluxo de eventos
 - `evolution-manager` publica `message.received`
 - `agent-runtime` publica `message.sent` e `lead.*`
-- `docker compose logs --tail=200 evolution-manager agent-runtime`
+- `docker compose -f infra/compose/docker-compose.yml logs --tail=200 evolution-manager agent-runtime`
 
 ## Diagnóstico (detalhado)
 
@@ -34,7 +34,7 @@ Este runbook cobre incidentes envolvendo **Redis**, usado para **Pub/Sub** (even
 
 - `REDIS_URL` correto em todos os serviços.
 - Em Docker Compose, use hostname do serviço (`redis://redis:6379`).
-- Em localhost, use `redis://localhost:6379`.
+- Em localhost, use `redis://localhost:${REDIS_HOST_PORT:-6380}`.
 
 ### Backpressure / memória
 
@@ -56,9 +56,9 @@ Em outro terminal (publicar teste):
 ## Mitigação / Recovery
 
 - Reiniciar Redis (local):
-  - `docker compose restart redis`
+  - `docker compose -f infra/compose/docker-compose.yml restart redis`
 - Reiniciar consumers/producers se houver reconexão travada:
-  - `docker compose restart evolution-manager agent-runtime backoffice-api`
+  - `docker compose -f infra/compose/docker-compose.yml restart evolution-manager agent-runtime backoffice-api`
 - Ajustar limites:
   - aumentar memória disponível
   - reduzir payloads e logs muito verbosos
@@ -72,4 +72,3 @@ Em outro terminal (publicar teste):
 ## Escalação
 
 - Se Redis impactar pipeline de mensagens: incident P0
-
