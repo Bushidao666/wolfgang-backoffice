@@ -3,6 +3,7 @@
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "evolution-manager/Dockerfile",
+    "dockerContext": ".",
     "watchPatterns": ["evolution-manager/**", "packages/**", "package.json"]
   },
   "deploy": {

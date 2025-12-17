@@ -3,6 +3,7 @@
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "autentique-service/Dockerfile",
+    "dockerContext": ".",
     "watchPatterns": ["autentique-service/**", "packages/**", "package.json"]
   },
   "deploy": {

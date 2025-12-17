@@ -3,6 +3,7 @@
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "backoffice-web/Dockerfile",
+    "dockerContext": ".",
     "watchPatterns": ["backoffice-web/**", "packages/**", "package.json"]
   },
   "deploy": {

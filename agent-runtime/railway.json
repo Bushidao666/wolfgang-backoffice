@@ -3,6 +3,7 @@
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "agent-runtime/Dockerfile",
+    "dockerContext": ".",
     "watchPatterns": ["agent-runtime/**"]
   },
   "deploy": {

@@ -3,6 +3,7 @@
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "facebook-capi/Dockerfile",
+    "dockerContext": ".",
     "watchPatterns": ["facebook-capi/**", "packages/**", "package.json"]
   },
   "deploy": {
