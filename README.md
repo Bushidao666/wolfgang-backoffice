@@ -45,6 +45,29 @@ Serviços:
 - Autentique Service: http://localhost:4002/health
 - Facebook CAPI: http://localhost:4003/health
 
+## Deploy no Railway (monorepo, sem docker-compose)
+
+O Railway sobe cada serviço isolado. Este repo já tem `railway.json` + scripts por serviço (com Nixpacks) para instalar os workspaces no diretório raiz e buildar apenas o app alvo.
+
+1. Crie **um serviço por app** (6 serviços): `backoffice-web`, `backoffice-api`, `agent-runtime`, `evolution-manager`, `autentique-service`, `facebook-capi`.
+2. Recomendo manter o *Root Directory* no **repo root** (para os workspaces `packages/*` funcionarem).
+3. Builder: Nixpacks.
+4. Configure o serviço para usar o manifest do app:
+   - Se sua conta/UI tiver *Service Manifest Path*, selecione o `railway.json` do app (ex.: `backoffice-api/railway.json`).
+   - Caso contrário, configure manualmente os comandos do serviço:
+     - Build: `bash <app>/railway-build.sh`
+     - Start: `bash <app>/railway-start.sh`
+5. Adicione um Redis no Railway (plugin) e configure `REDIS_URL` igual para os serviços que usam Redis.
+6. Configure as variáveis por serviço usando os exemplos:
+   - `backoffice-web/.env.example`
+   - `backoffice-api/.env.example`
+   - `agent-runtime/.env.example`
+   - `evolution-manager/.env.example`
+   - `autentique-service/.env.example`
+   - `facebook-capi/.env.example`
+
+Nota (Next.js): `NEXT_PUBLIC_*` precisa estar setado **no build** do `backoffice-web` (senão o bundle pode sair com valores vazios).
+
 ## Testes
 
 - Unit (workspace): `npm test`
