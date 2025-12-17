@@ -1,0 +1,21 @@
+{
+  "name": "wolfgang-backoffice",
+  "private": true,
+  "workspaces": [
+    "backoffice-web",
+    "backoffice-api",
+    "evolution-manager",
+    "autentique-service",
+    "facebook-capi",
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "npm -ws --if-present run lint",
+    "test": "npm -ws --if-present run test",
+    "e2e": "playwright test -c e2e/playwright.config.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "supabase": "^2.67.1"
+  }
+}

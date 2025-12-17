@@ -1,0 +1,59 @@
+---
+title: HuggingFace
+description: Learn how to use HuggingFace models in Agno.
+---
+
+Hugging Face provides a wide range of state-of-the-art language models tailored to diverse NLP tasks,
+including text generation, summarization, translation, and question answering.
+These models are available through the Hugging Face Transformers library and are widely
+adopted due to their ease of use, flexibility, and comprehensive documentation.
+
+Explore HuggingFace’s language models [here](https://huggingface.co/docs/text-generation-inference/en/supported_models).
+
+## Authentication
+
+Set your `HF_TOKEN` environment. You can get one [from HuggingFace here](https://huggingface.co/settings/tokens).
+
+<CodeGroup>
+
+```bash Mac
+export HF_TOKEN=***
+```
+
+```bash Windows
+setx HF_TOKEN ***
+```
+
+</CodeGroup>
+
+## Example
+
+Use `HuggingFace` with your `Agent`:
+
+<CodeGroup>
+
+```python agent.py
+from agno.agent import Agent, RunResponse
+from agno.models.huggingface import HuggingFace
+
+agent = Agent(
+    model=HuggingFace(
+        id="meta-llama/Meta-Llama-3-8B-Instruct",
+        max_tokens=4096,
+    ),
+    markdown=True
+)
+
+# Print the response on the terminal
+agent.print_response("Share a 2 sentence horror story.")
+```
+
+</CodeGroup>
+
+<Note> View more examples [here](../examples/models/huggingface). </Note>
+
+## Params
+
+<Snippet file="model-hf-params.mdx" />
+
+`HuggingFace` is a subclass of the [Model](/reference/models/model) class and has access to the same params.

@@ -1,0 +1,47 @@
+---
+title: POST /group/create/{{instance}}
+method: POST
+path: /group/create/{{instance}}
+folder: Group
+collection: Evolution API | v2.3.*
+---
+
+[Evolution API | v2.3.*](./index.md) › Group
+
+# POST /group/create/{{instance}}
+
+**Method:** `POST`  
+**Path:** `/group/create/{{instance}}`  
+**Folder:** `Group`  
+**Collection:** `Evolution API | v2.3.*`
+
+---
+
+## Description
+
+_No description provided in the Postman collection._
+
+## Authentication
+
+This endpoint does not appear to require authentication based on the Postman collection.
+
+## Variables used
+
+- `{{baseUrl}}`
+- `{{instance}}`
+
+## Request body
+
+Content type: `raw`
+
+```json
+{
+  "subject": "Test 02",
+  "description": "optional",
+  "participants": [
+    "5531900000000",
+    "5531900000000"
+  ]
+}
+```
+

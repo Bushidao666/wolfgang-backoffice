@@ -1,0 +1,33 @@
+## Delete AWS resources
+
+Play around and then delete AWS resources using:
+
+<CodeGroup>
+
+```bash terminal
+ag ws down --env prd --infra aws
+```
+
+```bash shorthand
+ag ws down prd:aws
+```
+
+</CodeGroup>
+
+or delete individual resource groups using:
+
+<CodeGroup>
+
+```bash app
+ag ws down --env prd --infra aws --group app
+```
+
+```bash api
+ag ws down --env prd --infra aws --group api
+```
+
+```bash database
+ag ws down --env prd --infra aws --group db
+```
+
+</CodeGroup>

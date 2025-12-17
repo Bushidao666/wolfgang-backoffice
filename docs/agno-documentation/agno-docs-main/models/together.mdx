@@ -1,0 +1,56 @@
+---
+title: Together
+description: Learn how to use Together with Agno.
+---
+
+Together is a platform for providing endpoints for Large Language models.
+See their library of models [here](https://www.together.ai/models).
+
+We recommend experimenting to find the best-suited model for your use-case.
+
+Together have tier based rate limits. See the [docs](https://docs.together.ai/docs/rate-limits) for more information.
+
+## Authentication
+
+Set your `TOGETHER_API_KEY` environment variable. Get your key [from Together here](https://api.together.xyz/settings/api-keys).
+
+<CodeGroup>
+
+```bash Mac
+export TOGETHER_API_KEY=***
+```
+
+```bash Windows
+setx TOGETHER_API_KEY ***
+```
+
+</CodeGroup>
+
+## Example
+
+Use `Together` with your `Agent`:
+
+<CodeGroup>
+
+```python agent.py
+from agno.agent import Agent, RunResponse
+from agno.models.together import Together
+
+agent = Agent(
+    model=Together(id="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"),
+    markdown=True
+)
+
+# Print the response in the terminal
+agent.print_response("Share a 2 sentence horror story.")
+```
+
+</CodeGroup>
+
+<Note> View more examples [here](../examples/models/together). </Note>
+
+## Params
+
+<Snippet file="model-together-params.mdx" />
+
+`Together` also supports the params of [OpenAI](/reference/models/openai).

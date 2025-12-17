@@ -1,0 +1,34 @@
+---
+title: Agentic Chunking
+---
+
+Agentic chunking is an intelligent method of splitting documents into smaller chunks by using a model to determine natural breakpoints in the text. Rather than splitting text at fixed character counts, it analyzes the content to find semantically meaningful boundaries like paragraph breaks and topic transitions.
+
+## Usage
+
+```python
+from agno.agent import Agent
+from agno.document.chunking.agentic import AgenticChunking
+from agno.knowledge.pdf_url import PDFUrlKnowledgeBase
+from agno.vectordb.pgvector import PgVector
+
+db_url = "postgresql+psycopg://ai:ai@localhost:5532/ai"
+
+knowledge_base = PDFUrlKnowledgeBase(
+    urls=["https://agno-public.s3.amazonaws.com/recipes/ThaiRecipes.pdf"],
+    vector_db=PgVector(table_name="recipes_agentic_chunking", db_url=db_url),
+    chunking_strategy=AgenticChunking(),
+)
+knowledge_base.load(recreate=False)  # Comment out after first run
+
+agent = Agent(
+    knowledge_base=knowledge_base,
+    search_knowledge=True,
+)
+
+agent.print_response("How to make Thai curry?", markdown=True)
+```
+
+## Agentic Chunking Params
+
+<Snippet file="chunking-agentic.mdx" />

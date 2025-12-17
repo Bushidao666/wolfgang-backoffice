@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: backoffice-api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["backoffice-api:4000"]
+
+  - job_name: agent-runtime
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["agent-runtime:5000"]
+
+  - job_name: evolution-manager
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["evolution-manager:4001"]
+
+  - job_name: autentique-service
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["autentique-service:4002"]
+
+  - job_name: facebook-capi
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["facebook-capi:4003"]
+

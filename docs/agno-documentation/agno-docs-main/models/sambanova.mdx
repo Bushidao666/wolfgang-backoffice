@@ -1,0 +1,47 @@
+---
+title: Sambanova
+description: Learn how to use Sambanova with Agno.
+---
+
+Sambanova is a platform for providing endpoints for Large Language models. Note that Sambanova currently does not support function calling.
+
+## Authentication
+
+Set your `SAMBANOVA_API_KEY` environment variable. Get your key from [here](https://cloud.sambanova.ai/apis).
+
+<CodeGroup>
+
+```bash Mac
+export SAMBANOVA_API_KEY=***
+```
+
+```bash Windows
+setx SAMBANOVA_API_KEY ***
+```
+
+</CodeGroup>
+
+## Example
+
+Use `Sambanova` with your `Agent`:
+
+<CodeGroup>
+
+```python agent.py
+from agno.agent import Agent, RunResponse
+from agno.models.sambanova import Sambanova
+
+agent = Agent(model=Sambanova(), markdown=True)
+
+# Print the response in the terminal
+agent.print_response("Share a 2 sentence horror story.")
+
+```
+
+</CodeGroup>
+
+## Params
+
+<Snippet file="model-sambanova-params.mdx" />
+
+`Sambanova` also supports the params of [OpenAI](/reference/models/openai).

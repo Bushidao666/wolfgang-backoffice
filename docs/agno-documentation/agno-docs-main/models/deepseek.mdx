@@ -1,0 +1,57 @@
+---
+title: DeepSeek
+description: Learn how to use DeepSeek models in Agno.
+---
+
+DeepSeek is a platform for providing endpoints for Large Language models.
+See their library of models [here](https://api-docs.deepseek.com/quick_start/pricing).
+
+We recommend experimenting to find the best-suited model for your use-case. Here are some general recommendations:
+
+- `deepseek-chat` model is good for most basic use-cases.
+- `deepseek-reasoner` model is good for complex reasoning and multi-step tasks.
+
+DeepSeek does not have rate limits. See their [docs](https://api-docs.deepseek.com/quick_start/rate_limit) for information about how to deal with slower responses during high traffic.
+
+## Authentication
+
+Set your `DEEPSEEK_API_KEY` environment variable. Get your key from [here](https://platform.deepseek.com/api_keys).
+
+<CodeGroup>
+
+```bash Mac
+export DEEPSEEK_API_KEY=***
+```
+
+```bash Windows
+setx DEEPSEEK_API_KEY ***
+```
+
+</CodeGroup>
+
+## Example
+
+Use `DeepSeek` with your `Agent`:
+
+<CodeGroup>
+
+```python agent.py
+from agno.agent import Agent, RunResponse
+from agno.models.deepseek import DeepSeek
+
+agent = Agent(model=DeepSeek(), markdown=True)
+
+# Print the response in the terminal
+agent.print_response("Share a 2 sentence horror story.")
+
+```
+
+</CodeGroup>
+
+<Note> View more examples [here](../examples/models/deepseek). </Note>
+
+## Params
+
+<Snippet file="model-deepseek-params.mdx" />
+
+`DeepSeek` also supports the params of [OpenAI](/reference/models/openai).

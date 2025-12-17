@@ -1,0 +1,102 @@
+---
+title: PDF Knowledge Base
+description: Learn how to use local PDF files in your knowledge base.
+sidebarTitle: PDF
+---
+
+The **PDFKnowledgeBase** reads **local PDF** files, converts them into vector embeddings and loads them to a vector database.
+
+## Usage
+
+<Note>
+
+We are using a local PgVector database for this example. [Make sure it's running](https://docs.agno.com/vectordb/pgvector)
+
+</Note>
+
+```shell
+pip install pypdf
+```
+
+```python knowledge_base.py
+from agno.knowledge.pdf import PDFKnowledgeBase, PDFReader
+from agno.vectordb.pgvector import PgVector
+
+pdf_knowledge_base = PDFKnowledgeBase(
+    path="data/pdfs",
+    # Table name: ai.pdf_documents
+    vector_db=PgVector(
+        table_name="pdf_documents",
+        db_url="postgresql+psycopg://ai:ai@localhost:5532/ai",
+    ),
+    reader=PDFReader(chunk=True),
+)
+```
+
+Then use the `pdf_knowledge_base` with an Agent:
+
+```python agent.py
+from agno.agent import Agent
+
+agent = Agent(
+    knowledge=pdf_knowledge_base,
+    search_knowledge=True,
+)
+agent.knowledge.load(recreate=False)
+
+agent.print_response("Ask me about something from the knowledge base")
+```
+
+#### PDFKnowledgeBase also supports async loading.
+
+```shell
+pip install qdrant-client
+```
+We are using a local Qdrant database for this example. [Make sure it's running](https://docs.agno.com/vectordb/qdrant)
+
+```python async_knowledge_base.py
+import asyncio
+
+from agno.agent import Agent
+from agno.knowledge.pdf import PDFKnowledgeBase, PDFReader
+from agno.vectordb.qdrant import Qdrant
+
+COLLECTION_NAME = "pdf-reader"
+
+vector_db = Qdrant(collection=COLLECTION_NAME, url="http://localhost:6333")
+
+# Create a knowledge base with the PDFs from the data/pdfs directory
+knowledge_base = PDFKnowledgeBase(
+    path="data/pdf",
+    vector_db=vector_db,
+    reader=PDFReader(chunk=True),
+)
+
+# Create an agent with the knowledge base
+agent = Agent(
+    knowledge=knowledge_base,
+    search_knowledge=True,
+)
+
+if __name__ == "__main__":
+    # Comment out after first run
+    asyncio.run(knowledge_base.aload(recreate=False))
+
+    # Create and use the agent
+    asyncio.run(agent.aprint_response("How to make Thai curry?", markdown=True))
+```
+
+## Params
+
+| Parameter | Type                               | Default       | Description                                                                                          |
+| --------- | ---------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------- |
+| `path`    | `Union[str, Path]`                 | -             | Path to `PDF` files. Can point to a single PDF file or a directory of PDF files.                     |
+| `reader`  | `Union[PDFReader, PDFImageReader]` | `PDFReader()` | A `PDFReader` or `PDFImageReader` that converts the `PDFs` into `Documents` for the vector database. |
+
+`PDFKnowledgeBase` is a subclass of the [AgentKnowledge](/reference/knowledge/base) class and has access to the same params.
+
+## Developer Resources
+
+- View [Sync loading Cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/agent_concepts/knowledge/pdf_kb.py)
+- View [Async loading Cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/agent_concepts/knowledge/pdf_kb_async.py)
+

@@ -1,0 +1,2 @@
+"""Handoff (core -> CRM schema)."""
+
