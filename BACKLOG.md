@@ -8,7 +8,7 @@
 - **Formato por EPIC:** cada EPIC contém (1) **Definição & Justificativa** e (2) **Impacto Técnico**, incluindo arquivos, conexões e áreas afetadas.
 - **Referências por linha:** as referências apontam para os documentos e **linhas específicas** que fundamentam a decisão.
 - **Paths com globs:** padrões como `/**` representam múltiplos arquivos dentro do diretório.  
-- **Estado do repositório:** hoje este repo contém apenas `docs/`. Os caminhos de código abaixo são os **alvos de implementação**, seguindo a estrutura proposta nos documentos de arquitetura.
+- **Estado do repositório:** este repo já contém os serviços e infraestrutura do monorepo. Para status auditado por EPIC/TASK, ver `INDICE_BACKLOG.md` e `BACKLOG_DETALHADO.md`.
 
 ## Organização por fases (alinhada ao Escopo V1)
 

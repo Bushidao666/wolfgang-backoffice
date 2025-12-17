@@ -10,12 +10,17 @@ COPY evolution-manager/package.json evolution-manager/package.json
 COPY autentique-service/package.json autentique-service/package.json
 COPY facebook-capi/package.json facebook-capi/package.json
 COPY packages/contracts/package.json packages/contracts/package.json
+COPY packages/logger/package.json packages/logger/package.json
 RUN npm ci --workspaces --include-workspace-root
 
 FROM base AS build
 COPY --from=deps /app/node_modules /app/node_modules
 COPY . .
+# Avoid TypeScript incremental caches from the host causing incomplete Docker builds
+# (dist is ignored via .dockerignore, but *.tsbuildinfo may still be copied).
+RUN rm -f backoffice-api/*.tsbuildinfo
 RUN npm -w @wolfgang/contracts run build
+RUN npm -w @wolfgang/logger run build
 RUN npm -w @wolfgang/backoffice-api run build
 
 FROM base AS runner
@@ -23,6 +28,7 @@ ENV NODE_ENV=production
 RUN apk add --no-cache curl
 COPY --from=deps /app/node_modules /app/node_modules
 COPY --from=build /app/packages/contracts /app/packages/contracts
+COPY --from=build /app/packages/logger /app/packages/logger
 COPY --from=build /app/backoffice-api/dist /app/backoffice-api/dist
 COPY --from=build /app/backoffice-api/package.json /app/backoffice-api/package.json
 EXPOSE 4000

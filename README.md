@@ -20,6 +20,22 @@ Backoffice multi-tenant para a holding, com arquitetura orientada a eventos (Red
 4. Suba os serviços:
    - `docker compose up --build`
 
+## Dev usando Supabase Cloud (sem Supabase local)
+
+1. Copie o template:
+   - `cp .env.cloud.example .env`
+2. Preencha no `.env` (no Supabase Dashboard → Project Settings → API):
+   - `SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SUPABASE_JWT_SECRET`
+   - `SUPABASE_DB_URL` (senha do DB)
+3. Suba os serviços:
+   - `docker compose up --build`
+
+Se o `agent-runtime` cair com `OSError: [Errno 101] Network is unreachable`, seu Docker provavelmente não tem rota IPv6 (o host direto do DB do Supabase é IPv6 por padrão). Use o override:
+
+- `docker compose -f docker-compose.yml -f docker-compose.agent-runtime-host.yml up --build`
+
 Serviços:
 
 - Backoffice Web: http://localhost:3000

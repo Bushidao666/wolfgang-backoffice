@@ -3,7 +3,6 @@ import { Injectable } from "@nestjs/common";
 import { NotFoundError, ValidationError } from "@wolfgang/contracts";
 
 import { AutentiqueServiceClient } from "../../../infrastructure/clients/autentique-service.client";
-import { PostgresService } from "../../../infrastructure/postgres/postgres.service";
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
 import type { CreateContractDto } from "../dto/create-contract.dto";
 
@@ -20,7 +19,6 @@ export class ContractsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly autentique: AutentiqueServiceClient,
-    private readonly postgres: PostgresService,
   ) {}
 
   private admin() {
@@ -66,7 +64,6 @@ export class ContractsService {
   async create(companyId: string, dto: CreateContractDto, opts?: { requestId?: string; correlationId?: string }) {
     const schemaName = await this.getCompanySchema(companyId);
 
-    const schemaIdent = `"${schemaName}"`;
     let deal:
       | {
           id: string;
@@ -80,14 +77,15 @@ export class ContractsService {
       | undefined;
 
     try {
-      const { rows } = await this.postgres.query(
-        `select id, company_id, core_lead_id, deal_full_name, deal_phone, deal_email, deal_valor_contrato
-         from ${schemaIdent}.deals
-         where id = $1 and company_id = $2
-         limit 1`,
-        [dto.deal_id, companyId],
-      );
-      deal = rows?.[0] as any;
+      const { data, error } = await this.admin()
+        .schema(schemaName)
+        .from("deals")
+        .select("id, company_id, core_lead_id, deal_full_name, deal_phone, deal_email, deal_valor_contrato")
+        .eq("id", dto.deal_id)
+        .eq("company_id", companyId)
+        .maybeSingle();
+      if (error) throw error;
+      deal = data as any;
     } catch (err) {
       throw new ValidationError("Failed to load deal", { error: err instanceof Error ? err.message : String(err) });
     }

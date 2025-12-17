@@ -1,0 +1,6 @@
+Wolfgang E2E Knowledge Base
+
+Este é um documento de teste para o pipeline de Knowledge Base.
+Ele deve ser processado (uploaded -> processing -> ready) e gerar chunks com embeddings.
+
+Conteúdo-chave: preço, contrato, atendimento, suporte.

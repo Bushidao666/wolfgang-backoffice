@@ -10,12 +10,14 @@ COPY evolution-manager/package.json evolution-manager/package.json
 COPY autentique-service/package.json autentique-service/package.json
 COPY facebook-capi/package.json facebook-capi/package.json
 COPY packages/contracts/package.json packages/contracts/package.json
+COPY packages/logger/package.json packages/logger/package.json
 RUN npm ci --workspaces --include-workspace-root
 
 FROM base AS build
 COPY --from=deps /app/node_modules /app/node_modules
 COPY . .
 RUN npm -w @wolfgang/contracts run build
+RUN npm -w @wolfgang/logger run build
 RUN npm -w @wolfgang/autentique-service run build
 
 FROM base AS runner
@@ -23,6 +25,7 @@ ENV NODE_ENV=production
 RUN apk add --no-cache curl
 COPY --from=deps /app/node_modules /app/node_modules
 COPY --from=build /app/packages/contracts /app/packages/contracts
+COPY --from=build /app/packages/logger /app/packages/logger
 COPY --from=build /app/autentique-service/dist /app/autentique-service/dist
 COPY --from=build /app/autentique-service/package.json /app/autentique-service/package.json
 EXPOSE 4002

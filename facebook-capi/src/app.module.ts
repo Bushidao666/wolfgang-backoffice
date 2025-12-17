@@ -8,7 +8,6 @@ import { supabaseConfig } from "./config/supabase.config";
 import { facebookConfig } from "./config/facebook.config";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor";
 import { LoggerService } from "./common/logging/logger.service";
-import { EventBusService } from "./infrastructure/messaging/event-bus.service";
 import { PrometheusModule } from "./infrastructure/metrics/prometheus.module";
 import { RedisModule } from "./infrastructure/redis/redis.module";
 import { SupabaseModule } from "./infrastructure/supabase/supabase.module";
@@ -27,7 +26,6 @@ import { EventsModule } from "./modules/events/events.module";
   ],
   providers: [
     LoggerService,
-    EventBusService,
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,

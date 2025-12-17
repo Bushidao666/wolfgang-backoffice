@@ -3,9 +3,9 @@
 > **Documento ID:** BACKLOG-DETALHADO-v1.0  
 > **Sistema:** Back-Office Multi-Tenant da Holding  
 > **Data de Criação:** 2025-12-16  
-> **Última Atualização:** 2025-12-16  
+> **Última Atualização:** 2025-12-17  
 > **Baseado em:** BACKLOG.md, Documentos de Arquitetura e Contexto de Negócio  
-> **Status:** Draft
+> **Status:** Auditado (2025-12-17)
 
 ---
 
@@ -55,6 +55,16 @@ Este documento é um **mapa técnico-operacional completo** que expande o `BACKL
 | P0 | Prioridade crítica (bloqueia outras) |
 | P1 | Prioridade alta |
 | P2 | Prioridade média |
+
+### Status de implementação (checkbox)
+
+| Marca | Significado |
+|-------|-------------|
+| `[x]` | Concluída (implementação presente no repositório) |
+| `[~]` | Parcial (implementado parcialmente / pendente de ajustes) |
+| `[ ]` | Não implementada |
+
+Obs.: tasks marcadas como concluídas indicam implementação no repositório; validações end-to-end com provedores externos dependem de credenciais/ambiente.
 
 ### Estrutura do Repositório (Alvo)
 
@@ -141,7 +151,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-0.1.1]** Criar `docker-compose.yml` com serviços base
+- [x] **[TASK-0.1.1]** Criar `docker-compose.yml` com serviços base
       ```
       📁 Arquivos:
          • Criar: docker-compose.yml (~100 linhas)
@@ -158,7 +168,7 @@ wolfgang-backoffice/
          • Healthchecks passando
       ```
 
-- [ ] **[TASK-0.1.2]** Criar `.env.example` com todas as variáveis
+- [x] **[TASK-0.1.2]** Criar `.env.example` com todas as variáveis
       ```
       📁 Arquivos:
          • Criar: .env.example (~50 linhas)
@@ -174,7 +184,7 @@ wolfgang-backoffice/
          • Nenhum secret real comitado
       ```
 
-- [ ] **[TASK-0.1.3]** Bootstrap `backoffice-web` (Next.js 14)
+- [x] **[TASK-0.1.3]** Bootstrap `backoffice-web` (Next.js 14)
       ```
       📁 Arquivos:
          • Criar: backoffice-web/package.json (~40 linhas)
@@ -195,7 +205,7 @@ wolfgang-backoffice/
          • Container Docker funciona
       ```
 
-- [ ] **[TASK-0.1.4]** Bootstrap `backoffice-api` (Nest.js)
+- [x] **[TASK-0.1.4]** Bootstrap `backoffice-api` (Nest.js)
       ```
       📁 Arquivos:
          • Criar: backoffice-api/package.json (~50 linhas)
@@ -216,7 +226,7 @@ wolfgang-backoffice/
          • Container Docker funciona
       ```
 
-- [ ] **[TASK-0.1.5]** Bootstrap `agent-runtime` (Python + Agno)
+- [x] **[TASK-0.1.5]** Bootstrap `agent-runtime` (Python + Agno)
       ```
       📁 Arquivos:
          • Criar: agent-runtime/pyproject.toml (~40 linhas)
@@ -236,7 +246,7 @@ wolfgang-backoffice/
          • Dependências instaladas corretamente
       ```
 
-- [ ] **[TASK-0.1.6]** Bootstrap `evolution-manager` (Nest.js)
+- [x] **[TASK-0.1.6]** Bootstrap `evolution-manager` (Nest.js)
       ```
       📁 Arquivos:
          • Criar: evolution-manager/package.json (~40 linhas)
@@ -254,7 +264,7 @@ wolfgang-backoffice/
          • Container Docker funciona
       ```
 
-- [ ] **[TASK-0.1.7]** Bootstrap `autentique-service` (Nest.js)
+- [x] **[TASK-0.1.7]** Bootstrap `autentique-service` (Nest.js)
       ```
       📁 Arquivos:
          • Criar: autentique-service/package.json (~40 linhas)
@@ -272,7 +282,7 @@ wolfgang-backoffice/
          • Container Docker funciona
       ```
 
-- [ ] **[TASK-0.1.8]** Bootstrap `facebook-capi` (Nest.js)
+- [x] **[TASK-0.1.8]** Bootstrap `facebook-capi` (Nest.js)
       ```
       📁 Arquivos:
          • Criar: facebook-capi/package.json (~40 linhas)
@@ -290,7 +300,7 @@ wolfgang-backoffice/
          • Container Docker funciona
       ```
 
-- [ ] **[TASK-0.1.9]** Bootstrap `packages/contracts` (Tipos compartilhados)
+- [x] **[TASK-0.1.9]** Bootstrap `packages/contracts` (Tipos compartilhados)
       ```
       📁 Arquivos:
          • Criar: packages/contracts/package.json (~20 linhas)
@@ -367,7 +377,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-0.2.1]** Definir catálogo de eventos em documentação
+- [x] **[TASK-0.2.1]** Definir catálogo de eventos em documentação
       ```
       📁 Arquivos:
          • Criar: docs/architecture/event-catalog.md (~200 linhas)
@@ -383,7 +393,7 @@ wolfgang-backoffice/
          • Regras de idempotência documentadas
       ```
 
-- [ ] **[TASK-0.2.2]** Implementar tipos de eventos em `packages/contracts`
+- [x] **[TASK-0.2.2]** Implementar tipos de eventos em `packages/contracts`
       ```
       📁 Arquivos:
          • Criar: packages/contracts/src/events/index.ts (~50 linhas)
@@ -404,7 +414,7 @@ wolfgang-backoffice/
          • Zod schemas para validação runtime
       ```
 
-- [ ] **[TASK-0.2.3]** Definir constantes de canais Redis
+- [x] **[TASK-0.2.3]** Definir constantes de canais Redis
       ```
       📁 Arquivos:
          • Criar: packages/contracts/src/channels.ts (~30 linhas)
@@ -419,7 +429,7 @@ wolfgang-backoffice/
          • Exportados como constantes imutáveis
       ```
 
-- [ ] **[TASK-0.2.4]** Implementar DTOs compartilhados
+- [x] **[TASK-0.2.4]** Implementar DTOs compartilhados
       ```
       📁 Arquivos:
          • Criar: packages/contracts/src/dto/index.ts (~20 linhas)
@@ -438,7 +448,7 @@ wolfgang-backoffice/
          • Exports funcionando
       ```
 
-- [ ] **[TASK-0.2.5]** Definir hierarquia de erros compartilhada
+- [x] **[TASK-0.2.5]** Definir hierarquia de erros compartilhada
       ```
       📁 Arquivos:
          • Criar: packages/contracts/src/errors/index.ts (~60 linhas)
@@ -456,7 +466,7 @@ wolfgang-backoffice/
          • Serialização consistente
       ```
 
-- [ ] **[TASK-0.2.6]** Implementar padrão de logging para Nest.js
+- [x] **[TASK-0.2.6]** Implementar padrão de logging para Nest.js
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/common/logging/logger.service.ts (~80 linhas)
@@ -472,7 +482,7 @@ wolfgang-backoffice/
          • Request-ID propagado
       ```
 
-- [ ] **[TASK-0.2.7]** Implementar padrão de logging para Python
+- [x] **[TASK-0.2.7]** Implementar padrão de logging para Python
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/common/config/logging.py (~70 linhas)
@@ -488,10 +498,10 @@ wolfgang-backoffice/
          • Correlation ID propagado
       ```
 
-- [ ] **[TASK-0.2.8]** Criar estrutura de testes por serviço
+- [x] **[TASK-0.2.8]** Criar estrutura de testes por serviço
       ```
       📁 Arquivos:
-         • Criar: backoffice-api/jest.config.js (~30 linhas)
+         • Criar: backoffice-api/jest.config.ts (~30 linhas)
          • Criar: backoffice-api/src/__tests__/setup.ts (~25 linhas)
          • Criar: agent-runtime/pytest.ini (~15 linhas)
          • Criar: agent-runtime/tests/conftest.py (~30 linhas)
@@ -583,7 +593,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-1.3.1]** Criar schema `core` e estrutura base
+- [x] **[TASK-1.3.1]** Criar schema `core` e estrutura base
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00001_create_core_schema.sql (~50 linhas)
@@ -600,7 +610,7 @@ wolfgang-backoffice/
          • Extensões básicas habilitadas
       ```
 
-- [ ] **[TASK-1.3.2]** Implementar `core.companies` e `core.company_users`
+- [x] **[TASK-1.3.2]** Implementar `core.companies` e `core.company_users`
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00002_core_companies.sql (~40 linhas)
@@ -617,7 +627,7 @@ wolfgang-backoffice/
          • Índices criados
       ```
 
-- [ ] **[TASK-1.3.3]** Implementar `core.leads` com tracking completo
+- [x] **[TASK-1.3.3]** Implementar `core.leads` com tracking completo
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00005_core_leads.sql (~80 linhas)
@@ -633,7 +643,7 @@ wolfgang-backoffice/
          • Índices de busca criados
       ```
 
-- [ ] **[TASK-1.3.4]** Implementar `core.centurion_configs`
+- [x] **[TASK-1.3.4]** Implementar `core.centurion_configs`
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00006_core_centurion_configs.sql (~100 linhas)
@@ -649,7 +659,7 @@ wolfgang-backoffice/
          • JSONB para qualification_rules
       ```
 
-- [ ] **[TASK-1.3.5]** Implementar `core.channel_instances`
+- [x] **[TASK-1.3.5]** Implementar `core.channel_instances`
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00007_core_channel_instances.sql (~60 linhas)
@@ -664,7 +674,7 @@ wolfgang-backoffice/
          • Campos específicos por canal
       ```
 
-- [ ] **[TASK-1.3.6]** Implementar `core.conversations` e `core.messages`
+- [x] **[TASK-1.3.6]** Implementar `core.conversations` e `core.messages`
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00008_core_conversations.sql (~70 linhas)
@@ -681,7 +691,7 @@ wolfgang-backoffice/
          • Índices por conversation_id e lead_id
       ```
 
-- [ ] **[TASK-1.3.7]** Habilitar pgvector e criar tabelas de memória
+- [x] **[TASK-1.3.7]** Habilitar pgvector e criar tabelas de memória
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00010_enable_pgvector.sql (~10 linhas)
@@ -699,7 +709,7 @@ wolfgang-backoffice/
          • JSONB para nodes/relationships
       ```
 
-- [ ] **[TASK-1.3.8]** Criar índices otimizados e seed de desenvolvimento
+- [x] **[TASK-1.3.8]** Criar índices otimizados e seed de desenvolvimento
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00013_core_indexes.sql (~60 linhas)
@@ -767,7 +777,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-1.4.1]** Implementar JWT strategy e auth guard
+- [x] **[TASK-1.4.1]** Implementar JWT strategy e auth guard
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/auth/strategies/jwt.strategy.ts (~60 linhas)
@@ -785,7 +795,7 @@ wolfgang-backoffice/
          • @CurrentUser() injeta payload
       ```
 
-- [ ] **[TASK-1.4.2]** Implementar roles guard e decorator
+- [x] **[TASK-1.4.2]** Implementar roles guard e decorator
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/common/guards/roles.guard.ts (~60 linhas)
@@ -802,7 +812,7 @@ wolfgang-backoffice/
          • super_admin tem acesso a tudo
       ```
 
-- [ ] **[TASK-1.4.3]** Implementar company guard (escopo por empresa)
+- [x] **[TASK-1.4.3]** Implementar company guard (escopo por empresa)
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/common/guards/company.guard.ts (~70 linhas)
@@ -817,7 +827,7 @@ wolfgang-backoffice/
          • Mismatch de company_id retorna 403
       ```
 
-- [ ] **[TASK-1.4.4]** Criar RLS policies para tabelas CORE
+- [x] **[TASK-1.4.4]** Criar RLS policies para tabelas CORE
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00020_rls_companies.sql (~40 linhas)
@@ -835,7 +845,7 @@ wolfgang-backoffice/
          • Queries diretas no banco respeitam RLS
       ```
 
-- [ ] **[TASK-1.4.5]** Criar RLS policies para Storage
+- [x] **[TASK-1.4.5]** Criar RLS policies para Storage
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00024_rls_storage.sql (~40 linhas)
@@ -852,7 +862,7 @@ wolfgang-backoffice/
          • Download só da própria empresa
       ```
 
-- [ ] **[TASK-1.4.6]** Criar testes automatizados de RLS
+- [x] **[TASK-1.4.6]** Criar testes automatizados de RLS
       ```
       📁 Arquivos:
          • Criar: supabase/tests/rls/leads_isolation.test.sql (~80 linhas)
@@ -911,7 +921,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-1.5.1]** Implementar Supabase module e service
+- [x] **[TASK-1.5.1]** Implementar Supabase module e service
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/infrastructure/supabase/supabase.module.ts (~25 linhas)
@@ -928,7 +938,7 @@ wolfgang-backoffice/
          • Service injetável em outros modules
       ```
 
-- [ ] **[TASK-1.5.2]** Implementar Redis module e service
+- [x] **[TASK-1.5.2]** Implementar Redis module e service
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/infrastructure/redis/redis.module.ts (~25 linhas)
@@ -945,7 +955,7 @@ wolfgang-backoffice/
          • TTL aplicado corretamente
       ```
 
-- [ ] **[TASK-1.5.3]** Implementar EventBus service
+- [x] **[TASK-1.5.3]** Implementar EventBus service
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/infrastructure/messaging/event-bus.service.ts (~80 linhas)
@@ -960,7 +970,7 @@ wolfgang-backoffice/
          • Tipos de packages/contracts usados
       ```
 
-- [ ] **[TASK-1.5.4]** Implementar Global Exception Filter
+- [x] **[TASK-1.5.4]** Implementar Global Exception Filter
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/common/filters/global-exception.filter.ts (~70 linhas)
@@ -977,7 +987,7 @@ wolfgang-backoffice/
          • Response padronizada
       ```
 
-- [ ] **[TASK-1.5.5]** Configurar OpenAPI/Swagger
+- [x] **[TASK-1.5.5]** Configurar OpenAPI/Swagger
       ```
       📁 Arquivos:
          • Modificar: backoffice-api/src/main.ts (~30 linhas adicionais)
@@ -993,7 +1003,7 @@ wolfgang-backoffice/
          • Tags organizadas
       ```
 
-- [ ] **[TASK-1.5.6]** Implementar Auth module completo
+- [x] **[TASK-1.5.6]** Implementar Auth module completo
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/auth/auth.module.ts (~30 linhas)
@@ -1053,7 +1063,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-1.6.1]** Criar schema `_template_base`
+- [x] **[TASK-1.6.1]** Criar schema `_template_base`
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00030_template_base_schema.sql (~100 linhas)
@@ -1069,7 +1079,7 @@ wolfgang-backoffice/
          • Índices criados
       ```
 
-- [ ] **[TASK-1.6.2]** Criar função de provisionamento de schema
+- [x] **[TASK-1.6.2]** Criar função de provisionamento de schema
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00031_provision_schema_function.sql (~80 linhas)
@@ -1085,7 +1095,7 @@ wolfgang-backoffice/
          • Grants configurados
       ```
 
-- [ ] **[TASK-1.6.3]** Implementar companies module (controller + service)
+- [x] **[TASK-1.6.3]** Implementar companies module (controller + service)
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/companies/companies.module.ts (~30 linhas)
@@ -1107,7 +1117,7 @@ wolfgang-backoffice/
          • Guards de role funcionando
       ```
 
-- [ ] **[TASK-1.6.4]** Implementar schema provisioner service
+- [x] **[TASK-1.6.4]** Implementar schema provisioner service
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/companies/services/schema-provisioner.service.ts (~100 linhas)
@@ -1123,7 +1133,7 @@ wolfgang-backoffice/
          • RLS funciona no novo schema
       ```
 
-- [ ] **[TASK-1.6.5]** Implementar company-users management
+- [x] **[TASK-1.6.5]** Implementar company-users management
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/companies/controllers/company-users.controller.ts (~80 linhas)
@@ -1166,7 +1176,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-1.7.1]** Setup TailwindCSS + ShadcnUI
+- [x] **[TASK-1.7.1]** Setup TailwindCSS + ShadcnUI
       ```
       📁 Arquivos:
          • Modificar: backoffice-web/package.json (deps)
@@ -1184,7 +1194,7 @@ wolfgang-backoffice/
          • Dark mode configurado
       ```
 
-- [ ] **[TASK-1.7.2]** Implementar API client e auth utilities
+- [x] **[TASK-1.7.2]** Implementar API client e auth utilities
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/lib/api/client.ts (~80 linhas)
@@ -1202,7 +1212,7 @@ wolfgang-backoffice/
          • useAuth hook funcional
       ```
 
-- [ ] **[TASK-1.7.3]** Implementar rotas de autenticação
+- [x] **[TASK-1.7.3]** Implementar rotas de autenticação
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/app/(auth)/login/page.tsx (~100 linhas)
@@ -1220,7 +1230,7 @@ wolfgang-backoffice/
          • Loading states
       ```
 
-- [ ] **[TASK-1.7.4]** Implementar middleware de proteção
+- [x] **[TASK-1.7.4]** Implementar middleware de proteção
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/middleware.ts (~60 linhas)
@@ -1235,7 +1245,7 @@ wolfgang-backoffice/
          • Token válido permite acesso
       ```
 
-- [ ] **[TASK-1.7.5]** Implementar layout de dashboard
+- [x] **[TASK-1.7.5]** Implementar layout de dashboard
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/app/(dashboard)/layout.tsx (~80 linhas)
@@ -1254,7 +1264,7 @@ wolfgang-backoffice/
          • Dark mode toggle
       ```
 
-- [ ] **[TASK-1.7.6]** Implementar tela de listagem de empresas
+- [x] **[TASK-1.7.6]** Implementar tela de listagem de empresas
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/app/(dashboard)/empresas/page.tsx (~100 linhas)
@@ -1273,7 +1283,7 @@ wolfgang-backoffice/
          • Filtros básicos
       ```
 
-- [ ] **[TASK-1.7.7]** Implementar modal de criar/editar empresa
+- [x] **[TASK-1.7.7]** Implementar modal de criar/editar empresa
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/modules/empresas/components/company-form.tsx (~150 linhas)
@@ -1349,7 +1359,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-2.8.1]** Setup projeto Python com Poetry/pyproject.toml
+- [x] **[TASK-2.8.1]** Setup projeto Python com Poetry/pyproject.toml
       ```
       📁 Arquivos:
          • Criar: agent-runtime/pyproject.toml (~80 linhas)
@@ -1366,7 +1376,7 @@ wolfgang-backoffice/
          • Deps principais instaladas (agno, fastapi, redis, supabase)
       ```
 
-- [ ] **[TASK-2.8.2]** Implementar Settings via Pydantic
+- [x] **[TASK-2.8.2]** Implementar Settings via Pydantic
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/common/config/settings.py (~60 linhas)
@@ -1382,7 +1392,7 @@ wolfgang-backoffice/
          • Settings singleton acessível
       ```
 
-- [ ] **[TASK-2.8.3]** Implementar Supabase client wrapper
+- [x] **[TASK-2.8.3]** Implementar Supabase client wrapper
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/common/infrastructure/database/supabase_client.py (~100 linhas)
@@ -1398,7 +1408,7 @@ wolfgang-backoffice/
          • Connection pooling configurado
       ```
 
-- [ ] **[TASK-2.8.4]** Implementar Redis client wrapper
+- [x] **[TASK-2.8.4]** Implementar Redis client wrapper
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/common/infrastructure/cache/redis_client.py (~80 linhas)
@@ -1414,7 +1424,7 @@ wolfgang-backoffice/
          • TTL aplicado
       ```
 
-- [ ] **[TASK-2.8.5]** Implementar Pub/Sub subscriber
+- [x] **[TASK-2.8.5]** Implementar Pub/Sub subscriber
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/common/infrastructure/messaging/pubsub.py (~90 linhas)
@@ -1430,7 +1440,7 @@ wolfgang-backoffice/
          • Retry em caso de falha
       ```
 
-- [ ] **[TASK-2.8.6]** Criar FastAPI entrypoint + health routes
+- [x] **[TASK-2.8.6]** Criar FastAPI entrypoint + health routes
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/api/main.py (~50 linhas)
@@ -1486,7 +1496,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-2.9.1]** Setup projeto evolution-manager Nest.js
+- [x] **[TASK-2.9.1]** Setup projeto evolution-manager Nest.js
       ```
       📁 Arquivos:
          • Criar: evolution-manager/package.json (~60 linhas)
@@ -1505,7 +1515,7 @@ wolfgang-backoffice/
          • Logs estruturados
       ```
 
-- [ ] **[TASK-2.9.2]** Implementar Evolution API client service
+- [x] **[TASK-2.9.2]** Implementar Evolution API client service
       ```
       📁 Arquivos:
          • Criar: evolution-manager/src/modules/instances/services/evolution-api.service.ts (~250 linhas)
@@ -1522,7 +1532,7 @@ wolfgang-backoffice/
          • sendMedia() envia arquivo
       ```
 
-- [ ] **[TASK-2.9.3]** Implementar CRUD de instâncias WhatsApp
+- [x] **[TASK-2.9.3]** Implementar CRUD de instâncias WhatsApp
       ```
       📁 Arquivos:
          • Criar: evolution-manager/src/modules/instances/instances.module.ts (~30 linhas)
@@ -1543,7 +1553,7 @@ wolfgang-backoffice/
          • Persiste em core.channel_instances
       ```
 
-- [ ] **[TASK-2.9.4]** Implementar webhook receiver
+- [x] **[TASK-2.9.4]** Implementar webhook receiver
       ```
       📁 Arquivos:
          • Criar: evolution-manager/src/modules/webhooks/webhooks.module.ts (~25 linhas)
@@ -1561,7 +1571,7 @@ wolfgang-backoffice/
          • Logging completo
       ```
 
-- [ ] **[TASK-2.9.5]** Implementar event publisher (Redis Pub/Sub)
+- [x] **[TASK-2.9.5]** Implementar event publisher (Redis Pub/Sub)
       ```
       📁 Arquivos:
          • Criar: evolution-manager/src/modules/webhooks/services/event-publisher.service.ts (~80 linhas)
@@ -1579,7 +1589,7 @@ wolfgang-backoffice/
          • Payload normalizado
       ```
 
-- [ ] **[TASK-2.9.6]** Integrar UI de instâncias no backoffice-web
+- [~] **[TASK-2.9.6]** Integrar UI de instâncias no backoffice-web
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/app/(dashboard)/instancias/page.tsx (~100 linhas)
@@ -1639,7 +1649,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-2.10.1]** Implementar entities de domínio
+- [x] **[TASK-2.10.1]** Implementar entities de domínio
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/centurion/domain/lead.py (~80 linhas)
@@ -1657,7 +1667,7 @@ wolfgang-backoffice/
          • Métodos de negócio (is_qualified, etc)
       ```
 
-- [ ] **[TASK-2.10.2]** Implementar repositories
+- [x] **[TASK-2.10.2]** Implementar repositories
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/centurion/repository/lead_repository.py (~100 linhas)
@@ -1676,7 +1686,7 @@ wolfgang-backoffice/
          • get_centurion_config() retorna config
       ```
 
-- [ ] **[TASK-2.10.3]** Implementar message handler (consumer)
+- [x] **[TASK-2.10.3]** Implementar message handler (consumer)
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/centurion/handlers/message_handler.py (~120 linhas)
@@ -1692,7 +1702,7 @@ wolfgang-backoffice/
          • Error handling robusto
       ```
 
-- [ ] **[TASK-2.10.4]** Implementar prompt builder
+- [x] **[TASK-2.10.4]** Implementar prompt builder
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/centurion/services/prompt_builder.py (~150 linhas)
@@ -1708,7 +1718,7 @@ wolfgang-backoffice/
          • Injeta ferramentas disponíveis
       ```
 
-- [ ] **[TASK-2.10.5]** Implementar CenturionService (orquestração)
+- [x] **[TASK-2.10.5]** Implementar CenturionService (orquestração)
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/centurion/services/centurion_service.py (~250 linhas)
@@ -1724,7 +1734,7 @@ wolfgang-backoffice/
          • Persiste resposta do agente
       ```
 
-- [ ] **[TASK-2.10.6]** Implementar qualification service
+- [x] **[TASK-2.10.6]** Implementar qualification service
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/centurion/services/qualification_service.py (~180 linhas)
@@ -1740,10 +1750,10 @@ wolfgang-backoffice/
          • Emite evento lead.qualified
       ```
 
-- [ ] **[TASK-2.10.7]** Integrar envio de resposta via Evolution Manager
+- [x] **[TASK-2.10.7]** Integrar envio de resposta via Evolution Manager
       ```
       📁 Arquivos:
-         • Criar: agent-runtime/src/modules/channels/services/whatsapp_sender.py (~80 linhas)
+         • Criar: agent-runtime/src/modules/centurion/services/whatsapp_sender.py (~80 linhas)
       
       🔗 Depende de: TASK-2.10.5, TASK-2.9.2
       
@@ -1792,7 +1802,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-2.11.1]** Implementar debounce handler
+- [x] **[TASK-2.11.1]** Implementar debounce handler
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/centurion/handlers/debounce_handler.py (~120 linhas)
@@ -1808,7 +1818,7 @@ wolfgang-backoffice/
          • Config por centurion_config
       ```
 
-- [ ] **[TASK-2.11.2]** Implementar response builder com chunking
+- [x] **[TASK-2.11.2]** Implementar response builder com chunking
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/centurion/services/response_builder.py (~150 linhas)
@@ -1824,7 +1834,7 @@ wolfgang-backoffice/
          • Chunks enviados sequencialmente
       ```
 
-- [ ] **[TASK-2.11.3]** Atualizar conversation com debounce state
+- [x] **[TASK-2.11.3]** Atualizar conversation com debounce state
       ```
       📁 Arquivos:
          • Modificar: agent-runtime/src/modules/centurion/domain/conversation.py (~20 linhas)
@@ -1841,7 +1851,7 @@ wolfgang-backoffice/
          • Recover de debounce após restart
       ```
 
-- [ ] **[TASK-2.11.4]** Integrar debounce/chunking no fluxo principal
+- [x] **[TASK-2.11.4]** Integrar debounce/chunking no fluxo principal
       ```
       📁 Arquivos:
          • Modificar: agent-runtime/src/modules/centurion/services/centurion_service.py (~50 linhas)
@@ -1893,7 +1903,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-2.12.1]** Implementar media downloader
+- [x] **[TASK-2.12.1]** Implementar media downloader
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/channels/services/media_downloader.py (~80 linhas)
@@ -1909,11 +1919,11 @@ wolfgang-backoffice/
          • Temp storage gerenciado
       ```
 
-- [ ] **[TASK-2.12.2]** Implementar Speech-to-Text service
+- [x] **[TASK-2.12.2]** Implementar Speech-to-Text service
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/channels/services/stt_service.py (~100 linhas)
-         • Criar: agent-runtime/src/config/openai.config.py (~20 linhas)
+         • Criar: agent-runtime/src/config/openai/config.py (~20 linhas)
       
       🔗 Depende de: TASK-2.12.1
       
@@ -1926,7 +1936,7 @@ wolfgang-backoffice/
          • Múltiplos formatos suportados
       ```
 
-- [ ] **[TASK-2.12.3]** Implementar Vision service
+- [x] **[TASK-2.12.3]** Implementar Vision service
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/channels/services/vision_service.py (~100 linhas)
@@ -1942,7 +1952,7 @@ wolfgang-backoffice/
          • Fallback para erro
       ```
 
-- [ ] **[TASK-2.12.4]** Integrar multimodal no message handler
+- [x] **[TASK-2.12.4]** Integrar multimodal no message handler
       ```
       📁 Arquivos:
          • Modificar: agent-runtime/src/modules/centurion/handlers/message_handler.py (~40 linhas)
@@ -1993,7 +2003,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-2.13.1]** Implementar short-term memory service
+- [x] **[TASK-2.13.1]** Implementar short-term memory service
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/memory/services/short_term_memory.py (~120 linhas)
@@ -2011,7 +2021,7 @@ wolfgang-backoffice/
          • Cache em Redis para performance
       ```
 
-- [ ] **[TASK-2.13.2]** Integrar memória curta no prompt builder
+- [x] **[TASK-2.13.2]** Integrar memória curta no prompt builder
       ```
       📁 Arquivos:
          • Modificar: agent-runtime/src/modules/centurion/services/prompt_builder.py (~30 linhas)
@@ -2027,7 +2037,7 @@ wolfgang-backoffice/
          • Role correta (user/assistant)
       ```
 
-- [ ] **[TASK-2.13.3]** Implementar limpeza automática de histórico antigo
+- [x] **[TASK-2.13.3]** Implementar limpeza automática de histórico antigo
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/memory/services/memory_cleanup.py (~60 linhas)
@@ -2099,7 +2109,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-3.14.1]** Implementar fact extractor service
+- [x] **[TASK-3.14.1]** Implementar fact extractor service
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/memory/services/fact_extractor.py (~150 linhas)
@@ -2116,7 +2126,7 @@ wolfgang-backoffice/
          • Async para não bloquear fluxo
       ```
 
-- [ ] **[TASK-3.14.2]** Implementar embedding service
+- [x] **[TASK-3.14.2]** Implementar embedding service
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/memory/services/embedding_service.py (~80 linhas)
@@ -2132,7 +2142,7 @@ wolfgang-backoffice/
          • Cache de embeddings
       ```
 
-- [ ] **[TASK-3.14.3]** Implementar fact repository com pgvector
+- [x] **[TASK-3.14.3]** Implementar fact repository com pgvector
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/memory/repository/fact_repository.py (~90 linhas)
@@ -2148,7 +2158,7 @@ wolfgang-backoffice/
          • Índice ivfflat usado
       ```
 
-- [ ] **[TASK-3.14.4]** Implementar RAG adapter
+- [x] **[TASK-3.14.4]** Implementar RAG adapter
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/memory/adapters/rag_adapter.py (~120 linhas)
@@ -2164,7 +2174,7 @@ wolfgang-backoffice/
          • Formatação para prompt
       ```
 
-- [ ] **[TASK-3.14.5]** Integrar RAG no fluxo de qualificação
+- [x] **[TASK-3.14.5]** Integrar RAG no fluxo de qualificação
       ```
       📁 Arquivos:
          • Modificar: agent-runtime/src/modules/centurion/services/centurion_service.py (~30 linhas)
@@ -2219,7 +2229,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-3.15.1]** Implementar CRUD de tools na API
+- [x] **[TASK-3.15.1]** Implementar CRUD de tools na API
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/tools/tools.module.ts (~25 linhas)
@@ -2240,7 +2250,7 @@ wolfgang-backoffice/
          • JSON Schema validado na criação
       ```
 
-- [ ] **[TASK-3.15.2]** Implementar tool entity e schema validator no Agent Runtime
+- [x] **[TASK-3.15.2]** Implementar tool entity e schema validator no Agent Runtime
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/tools/domain/tool.py (~70 linhas)
@@ -2257,7 +2267,7 @@ wolfgang-backoffice/
          • Repository carrega tools da config
       ```
 
-- [ ] **[TASK-3.15.3]** Implementar tool executor
+- [x] **[TASK-3.15.3]** Implementar tool executor
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/tools/services/tool_executor.py (~150 linhas)
@@ -2274,7 +2284,7 @@ wolfgang-backoffice/
          • Response parsed
       ```
 
-- [ ] **[TASK-3.15.4]** Integrar tools no Agno Agent
+- [x] **[TASK-3.15.4]** Integrar tools no Agno Agent
       ```
       📁 Arquivos:
          • Modificar: agent-runtime/src/modules/centurion/services/centurion_service.py (~40 linhas)
@@ -2291,7 +2301,7 @@ wolfgang-backoffice/
          • Logging de execução
       ```
 
-- [ ] **[TASK-3.15.5]** Implementar UI de configuração de tools
+- [x] **[TASK-3.15.5]** Implementar UI de configuração de tools
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/modules/centurions/tools/tools-config.tsx (~200 linhas)
@@ -2346,7 +2356,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-3.16.1]** Implementar CRUD de MCP servers na API
+- [x] **[TASK-3.16.1]** Implementar CRUD de MCP servers na API
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/mcp/mcp.module.ts (~25 linhas)
@@ -2365,7 +2375,7 @@ wolfgang-backoffice/
          • Validação de URL do server
       ```
 
-- [ ] **[TASK-3.16.2]** Implementar MCP client registry
+- [x] **[TASK-3.16.2]** Implementar MCP client registry
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/tools/services/mcp_registry.py (~180 linhas)
@@ -2381,7 +2391,7 @@ wolfgang-backoffice/
          • Reconnect automático
       ```
 
-- [ ] **[TASK-3.16.3]** Implementar MCP tool adapter
+- [x] **[TASK-3.16.3]** Implementar MCP tool adapter
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/tools/services/mcp_tool_adapter.py (~120 linhas)
@@ -2397,7 +2407,7 @@ wolfgang-backoffice/
          • Timeout handling
       ```
 
-- [ ] **[TASK-3.16.4]** Integrar MCP tools no tool registry
+- [x] **[TASK-3.16.4]** Integrar MCP tools no tool registry
       ```
       📁 Arquivos:
          • Modificar: agent-runtime/src/modules/tools/services/tool_registry.py (~40 linhas)
@@ -2412,7 +2422,7 @@ wolfgang-backoffice/
          • Priorização configurável
       ```
 
-- [ ] **[TASK-3.16.5]** Implementar UI de configuração MCP
+- [x] **[TASK-3.16.5]** Implementar UI de configuração MCP
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/modules/centurions/mcp/mcp-config.tsx (~150 linhas)
@@ -2466,7 +2476,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-3.17.1]** Criar bucket de Storage para documentos
+- [x] **[TASK-3.17.1]** Criar bucket de Storage para documentos
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00040_kb_bucket.sql (~30 linhas)
@@ -2484,7 +2494,7 @@ wolfgang-backoffice/
          • Índices pgvector criados
       ```
 
-- [ ] **[TASK-3.17.2]** Implementar upload e CRUD de documentos
+- [x] **[TASK-3.17.2]** Implementar upload e CRUD de documentos
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/knowledge-base/kb.module.ts (~30 linhas)
@@ -2503,7 +2513,7 @@ wolfgang-backoffice/
          • Arquivo salvo no Storage
       ```
 
-- [ ] **[TASK-3.17.3]** Implementar document processor (chunking)
+- [x] **[TASK-3.17.3]** Implementar document processor (chunking)
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/knowledge-base/services/document-processor.service.ts (~200 linhas)
@@ -2520,7 +2530,7 @@ wolfgang-backoffice/
          • Queue para processamento async
       ```
 
-- [ ] **[TASK-3.17.4]** Implementar geração de embeddings para chunks
+- [x] **[TASK-3.17.4]** Implementar geração de embeddings para chunks
       ```
       📁 Arquivos:
          • Modificar: backoffice-api/src/modules/knowledge-base/services/document-processor.service.ts (~50 linhas)
@@ -2536,7 +2546,7 @@ wolfgang-backoffice/
          • Batch processing
       ```
 
-- [ ] **[TASK-3.17.5]** Implementar Knowledge Base adapter no Agent Runtime
+- [x] **[TASK-3.17.5]** Implementar Knowledge Base adapter no Agent Runtime
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/memory/adapters/knowledge_base_adapter.py (~120 linhas)
@@ -2552,7 +2562,7 @@ wolfgang-backoffice/
          • Formatação para prompt
       ```
 
-- [ ] **[TASK-3.17.6]** Integrar KB no prompt builder
+- [x] **[TASK-3.17.6]** Integrar KB no prompt builder
       ```
       📁 Arquivos:
          • Modificar: agent-runtime/src/modules/centurion/services/prompt_builder.py (~25 linhas)
@@ -2567,7 +2577,7 @@ wolfgang-backoffice/
          • Citações de fonte
       ```
 
-- [ ] **[TASK-3.17.7]** Implementar UI de Knowledge Base
+- [x] **[TASK-3.17.7]** Implementar UI de Knowledge Base
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/app/(dashboard)/knowledge-base/page.tsx (~80 linhas)
@@ -2623,7 +2633,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-3.18.1]** Criar tabela de regras de follow-up
+- [x] **[TASK-3.18.1]** Criar tabela de regras de follow-up
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00050_followup_rules.sql (~50 linhas)
@@ -2640,7 +2650,7 @@ wolfgang-backoffice/
          • RLS aplicado
       ```
 
-- [ ] **[TASK-3.18.2]** Implementar CRUD de follow-up rules na API
+- [x] **[TASK-3.18.2]** Implementar CRUD de follow-up rules na API
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/followups/followups.module.ts (~25 linhas)
@@ -2659,7 +2669,7 @@ wolfgang-backoffice/
          • DELETE /centurions/:id/followup-rules/:id remove
       ```
 
-- [ ] **[TASK-3.18.3]** Implementar followup service no Agent Runtime
+- [x] **[TASK-3.18.3]** Implementar followup service no Agent Runtime
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/followups/services/followup_service.py (~180 linhas)
@@ -2677,7 +2687,7 @@ wolfgang-backoffice/
          • Filtros por inactivity_hours
       ```
 
-- [ ] **[TASK-3.18.4]** Implementar proactive handler (worker)
+- [x] **[TASK-3.18.4]** Implementar proactive handler (worker)
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/handlers/proactive_handler.py (~150 linhas)
@@ -2694,7 +2704,7 @@ wolfgang-backoffice/
          • Marca como executado
       ```
 
-- [ ] **[TASK-3.18.5]** Implementar UI de configuração de follow-ups
+- [x] **[TASK-3.18.5]** Implementar UI de configuração de follow-ups
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/modules/centurions/followups/followups-config.tsx (~180 linhas)
@@ -2767,7 +2777,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-4.19.1]** Criar tabela core.deals_index e triggers
+- [x] **[TASK-4.19.1]** Criar tabela core.deals_index e triggers
       ```
       📁 Arquivos:
          • Criar: supabase/migrations/00060_deals_index.sql (~50 linhas)
@@ -2784,7 +2794,7 @@ wolfgang-backoffice/
          • Índices de busca
       ```
 
-- [ ] **[TASK-4.19.2]** Implementar handoff service no Agent Runtime
+- [x] **[TASK-4.19.2]** Implementar handoff service no Agent Runtime
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/handoff/services/handoff_service.py (~180 linhas)
@@ -2802,7 +2812,7 @@ wolfgang-backoffice/
          • Lead marcado como handoff_completed
       ```
 
-- [ ] **[TASK-4.19.3]** Integrar handoff no fluxo de qualificação
+- [x] **[TASK-4.19.3]** Integrar handoff no fluxo de qualificação
       ```
       📁 Arquivos:
          • Modificar: agent-runtime/src/modules/centurion/services/qualification_service.py (~40 linhas)
@@ -2818,7 +2828,7 @@ wolfgang-backoffice/
          • Métricas atualizadas
       ```
 
-- [ ] **[TASK-4.19.4]** Implementar endpoints de deals na API
+- [x] **[TASK-4.19.4]** Implementar endpoints de deals na API
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/deals/deals.module.ts (~30 linhas)
@@ -2837,7 +2847,7 @@ wolfgang-backoffice/
          • Filtros por status e data
       ```
 
-- [ ] **[TASK-4.19.5]** Implementar UI de deals
+- [x] **[TASK-4.19.5]** Implementar UI de deals
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/app/(dashboard)/deals/page.tsx (~100 linhas)
@@ -2893,7 +2903,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-4.20.1]** Setup projeto autentique-service
+- [x] **[TASK-4.20.1]** Setup projeto autentique-service
       ```
       📁 Arquivos:
          • Criar: autentique-service/package.json (~50 linhas)
@@ -2912,7 +2922,7 @@ wolfgang-backoffice/
          • Logs estruturados
       ```
 
-- [ ] **[TASK-4.20.2]** Implementar Autentique API client
+- [x] **[TASK-4.20.2]** Implementar Autentique API client
       ```
       📁 Arquivos:
          • Criar: autentique-service/src/infrastructure/autentique/autentique.client.ts (~200 linhas)
@@ -2929,7 +2939,7 @@ wolfgang-backoffice/
          • listSigners() retorna signatários
       ```
 
-- [ ] **[TASK-4.20.3]** Implementar contracts module
+- [x] **[TASK-4.20.3]** Implementar contracts module
       ```
       📁 Arquivos:
          • Criar: autentique-service/src/modules/contracts/contracts.module.ts (~30 linhas)
@@ -2949,7 +2959,7 @@ wolfgang-backoffice/
          • Persistência em core.contracts
       ```
 
-- [ ] **[TASK-4.20.4]** Implementar webhook receiver para status
+- [x] **[TASK-4.20.4]** Implementar webhook receiver para status
       ```
       📁 Arquivos:
          • Criar: autentique-service/src/modules/contracts/controllers/webhooks.controller.ts (~80 linhas)
@@ -2966,7 +2976,7 @@ wolfgang-backoffice/
          • Notificação para responsável
       ```
 
-- [ ] **[TASK-4.20.5]** Integrar templates de contrato na API principal
+- [x] **[TASK-4.20.5]** Integrar templates de contrato na API principal
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/contracts/contracts.module.ts (~25 linhas)
@@ -2984,7 +2994,7 @@ wolfgang-backoffice/
          • Preview de contrato
       ```
 
-- [ ] **[TASK-4.20.6]** Implementar UI de contratos
+- [x] **[TASK-4.20.6]** Implementar UI de contratos
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/app/(dashboard)/contratos/page.tsx (~80 linhas)
@@ -3040,7 +3050,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-4.21.1]** Setup projeto facebook-capi
+- [x] **[TASK-4.21.1]** Setup projeto facebook-capi
       ```
       📁 Arquivos:
          • Criar: facebook-capi/package.json (~50 linhas)
@@ -3059,7 +3069,7 @@ wolfgang-backoffice/
          • Logs estruturados
       ```
 
-- [ ] **[TASK-4.21.2]** Implementar Meta Conversions API client
+- [x] **[TASK-4.21.2]** Implementar Meta Conversions API client
       ```
       📁 Arquivos:
          • Criar: facebook-capi/src/infrastructure/facebook/facebook.client.ts (~180 linhas)
@@ -3076,7 +3086,7 @@ wolfgang-backoffice/
          • Test events mode
       ```
 
-- [ ] **[TASK-4.21.3]** Implementar CRUD de pixel configs na API principal
+- [x] **[TASK-4.21.3]** Implementar CRUD de pixel configs na API principal
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/marketing/marketing.module.ts (~25 linhas)
@@ -3095,7 +3105,7 @@ wolfgang-backoffice/
          • Teste de conexão
       ```
 
-- [ ] **[TASK-4.21.4]** Implementar event subscriber e sender
+- [x] **[TASK-4.21.4]** Implementar event subscriber e sender
       ```
       📁 Arquivos:
          • Criar: facebook-capi/src/modules/events/events.module.ts (~30 linhas)
@@ -3114,7 +3124,7 @@ wolfgang-backoffice/
          • Queue para retry
       ```
 
-- [ ] **[TASK-4.21.5]** Integrar tracking no fluxo de leads
+- [x] **[TASK-4.21.5]** Integrar tracking no fluxo de leads
       ```
       📁 Arquivos:
          • Modificar: agent-runtime/src/modules/centurion/services/centurion_service.py (~30 linhas)
@@ -3131,7 +3141,7 @@ wolfgang-backoffice/
          • fbc/fbp cookies usados
       ```
 
-- [ ] **[TASK-4.21.6]** Implementar UI de marketing/pixels
+- [x] **[TASK-4.21.6]** Implementar UI de marketing/pixels
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/app/(dashboard)/marketing/page.tsx (~80 linhas)
@@ -3186,7 +3196,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-4.22.1]** Implementar Instagram adapter no Agent Runtime
+- [x] **[TASK-4.22.1]** Implementar Instagram adapter no Agent Runtime
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/channels/adapters/instagram_adapter.py (~150 linhas)
@@ -3203,7 +3213,7 @@ wolfgang-backoffice/
          • Trata stories/mentions
       ```
 
-- [ ] **[TASK-4.22.2]** Implementar Telegram adapter no Agent Runtime
+- [x] **[TASK-4.22.2]** Implementar Telegram adapter no Agent Runtime
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/channels/adapters/telegram_adapter.py (~150 linhas)
@@ -3219,11 +3229,11 @@ wolfgang-backoffice/
          • Trata comandos (/start, etc)
       ```
 
-- [ ] **[TASK-4.22.3]** Implementar Instagram service no Evolution Manager
+- [x] **[TASK-4.22.3]** Implementar Instagram service no Evolution Manager
       ```
       📁 Arquivos:
          • Criar: evolution-manager/src/modules/instances/channels/instagram.service.ts (~120 linhas)
-         • Modificar: evolution-manager/src/modules/instances/instances.service.ts (~40 linhas)
+         • Modificar: evolution-manager/src/modules/instances/services/instances.service.ts (~40 linhas)
       
       🔗 Depende de: TASK-2.9.3
       
@@ -3236,7 +3246,7 @@ wolfgang-backoffice/
          • Envia respostas
       ```
 
-- [ ] **[TASK-4.22.4]** Implementar Telegram service
+- [x] **[TASK-4.22.4]** Implementar Telegram service
       ```
       📁 Arquivos:
          • Criar: evolution-manager/src/modules/instances/channels/telegram.service.ts (~120 linhas)
@@ -3253,7 +3263,7 @@ wolfgang-backoffice/
          • Envia respostas
       ```
 
-- [ ] **[TASK-4.22.5]** Implementar UI de configuração multi-canal
+- [x] **[TASK-4.22.5]** Implementar UI de configuração multi-canal
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/modules/instancias/channels/instagram-config.tsx (~100 linhas)
@@ -3271,7 +3281,7 @@ wolfgang-backoffice/
          • Teste de envio
       ```
 
-- [ ] **[TASK-4.22.6]** Unificar roteamento de mensagens por canal
+- [~] **[TASK-4.22.6]** Unificar roteamento de mensagens por canal
       ```
       📁 Arquivos:
          • Criar: agent-runtime/src/modules/channels/services/channel_router.py (~100 linhas)
@@ -3344,7 +3354,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-5.23.1]** Implementar metrics service com agregações
+- [x] **[TASK-5.23.1]** Implementar metrics service com agregações
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/metrics/metrics.module.ts (~30 linhas)
@@ -3362,7 +3372,7 @@ wolfgang-backoffice/
          • Agregação por período
       ```
 
-- [ ] **[TASK-5.23.2]** Implementar cache de métricas
+- [x] **[TASK-5.23.2]** Implementar cache de métricas
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/infrastructure/redis/cache.service.ts (~80 linhas)
@@ -3379,7 +3389,7 @@ wolfgang-backoffice/
          • TTL configurável
       ```
 
-- [ ] **[TASK-5.23.3]** Implementar endpoints de métricas
+- [x] **[TASK-5.23.3]** Implementar endpoints de métricas
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/metrics/controllers/metrics.controller.ts (~150 linhas)
@@ -3395,7 +3405,7 @@ wolfgang-backoffice/
          • GET /metrics/timeline retorna série temporal
       ```
 
-- [ ] **[TASK-5.23.4]** Implementar WebSocket para real-time
+- [x] **[TASK-5.23.4]** Implementar WebSocket para real-time
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/infrastructure/ws/ws.gateway.ts (~100 linhas)
@@ -3412,7 +3422,7 @@ wolfgang-backoffice/
          • Rooms por company_id
       ```
 
-- [ ] **[TASK-5.23.5]** Implementar dashboard UI com gráficos
+- [x] **[TASK-5.23.5]** Implementar dashboard UI com gráficos
       ```
       📁 Arquivos:
          • Modificar: backoffice-web/src/app/(dashboard)/page.tsx (~150 linhas)
@@ -3471,7 +3481,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-5.24.1]** Implementar leads module com CRUD
+- [x] **[TASK-5.24.1]** Implementar leads module com CRUD
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/leads/leads.module.ts (~30 linhas)
@@ -3491,7 +3501,7 @@ wolfgang-backoffice/
          • Busca por nome/telefone
       ```
 
-- [ ] **[TASK-5.24.2]** Implementar timeline service
+- [x] **[TASK-5.24.2]** Implementar timeline service
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/leads/services/timeline.service.ts (~120 linhas)
@@ -3509,7 +3519,7 @@ wolfgang-backoffice/
          • Paginação para longas
       ```
 
-- [ ] **[TASK-5.24.3]** Implementar UI de listagem de leads
+- [x] **[TASK-5.24.3]** Implementar UI de listagem de leads
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/app/(dashboard)/leads/page.tsx (~100 linhas)
@@ -3529,7 +3539,7 @@ wolfgang-backoffice/
          • Click abre detalhes
       ```
 
-- [ ] **[TASK-5.24.4]** Implementar UI de timeline do lead
+- [x] **[TASK-5.24.4]** Implementar UI de timeline do lead
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/app/(dashboard)/leads/[id]/page.tsx (~80 linhas)
@@ -3586,7 +3596,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-5.25.1]** Implementar centurions module com CRUD
+- [x] **[TASK-5.25.1]** Implementar centurions module com CRUD
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/centurions/centurions.module.ts (~35 linhas)
@@ -3607,7 +3617,7 @@ wolfgang-backoffice/
          • DELETE /centurions/:id remove
       ```
 
-- [ ] **[TASK-5.25.2]** Implementar endpoint de teste de centurion
+- [x] **[TASK-5.25.2]** Implementar endpoint de teste de centurion
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/centurions/controllers/centurion-test.controller.ts (~80 linhas)
@@ -3624,7 +3634,7 @@ wolfgang-backoffice/
          • Útil para testar prompts
       ```
 
-- [ ] **[TASK-5.25.3]** Implementar UI de listagem de centurions
+- [x] **[TASK-5.25.3]** Implementar UI de listagem de centurions
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/app/(dashboard)/centurions/page.tsx (~100 linhas)
@@ -3642,7 +3652,7 @@ wolfgang-backoffice/
          • Criar novo centurion
       ```
 
-- [ ] **[TASK-5.25.4]** Implementar editor de centurion
+- [x] **[TASK-5.25.4]** Implementar editor de centurion
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/app/(dashboard)/centurions/[id]/page.tsx (~80 linhas)
@@ -3663,7 +3673,7 @@ wolfgang-backoffice/
          • Preview de prompt
       ```
 
-- [ ] **[TASK-5.25.5]** Implementar playground de teste na UI
+- [x] **[TASK-5.25.5]** Implementar playground de teste na UI
       ```
       📁 Arquivos:
          • Criar: backoffice-web/src/modules/centurions/components/centurion-playground.tsx (~200 linhas)
@@ -3718,7 +3728,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-6.26.1]** Implementar unit tests para backoffice-api
+- [x] **[TASK-6.26.1]** Implementar unit tests para backoffice-api
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/modules/**/*.spec.ts (~2000 linhas total)
@@ -3735,7 +3745,7 @@ wolfgang-backoffice/
          • CI rodando testes
       ```
 
-- [ ] **[TASK-6.26.2]** Implementar integration tests para APIs
+- [x] **[TASK-6.26.2]** Implementar integration tests para APIs
       ```
       📁 Arquivos:
          • Criar: backoffice-api/test/integration/**/*.e2e-spec.ts (~1500 linhas total)
@@ -3752,7 +3762,7 @@ wolfgang-backoffice/
          • Error handling testado
       ```
 
-- [ ] **[TASK-6.26.3]** Implementar testes de RLS
+- [x] **[TASK-6.26.3]** Implementar testes de RLS
       ```
       📁 Arquivos:
          • Criar: supabase/tests/rls/*.test.sql (~500 linhas total)
@@ -3769,7 +3779,7 @@ wolfgang-backoffice/
          • CI rodando testes RLS
       ```
 
-- [ ] **[TASK-6.26.4]** Implementar E2E tests para fluxos críticos
+- [x] **[TASK-6.26.4]** Implementar E2E tests para fluxos críticos
       ```
       📁 Arquivos:
          • Criar: e2e/tests/**/*.spec.ts (~800 linhas total)
@@ -3788,12 +3798,12 @@ wolfgang-backoffice/
          • Ci com Playwright
       ```
 
-- [ ] **[TASK-6.26.5]** Implementar unit tests para agent-runtime
+- [x] **[TASK-6.26.5]** Implementar unit tests para agent-runtime
       ```
       📁 Arquivos:
          • Criar: agent-runtime/tests/**/*.py (~1500 linhas total)
          • Criar: agent-runtime/pytest.ini (~20 linhas)
-         • Criar: agent-runtime/conftest.py (~100 linhas)
+         • Criar: agent-runtime/tests/conftest.py (~100 linhas)
       
       🔗 Depende de: TASK-3.18.4
       
@@ -3828,7 +3838,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-6.27.1]** Implementar logs estruturados em todos os serviços
+- [x] **[TASK-6.27.1]** Implementar logs estruturados em todos os serviços
       ```
       📁 Arquivos:
          • Criar: packages/logger/src/index.ts (~80 linhas)
@@ -3847,7 +3857,7 @@ wolfgang-backoffice/
          • Sensitive data masking
       ```
 
-- [ ] **[TASK-6.27.2]** Implementar métricas Prometheus
+- [x] **[TASK-6.27.2]** Implementar métricas Prometheus
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/infrastructure/metrics/prometheus.module.ts (~50 linhas)
@@ -3865,7 +3875,7 @@ wolfgang-backoffice/
          • Prometheus scraping
       ```
 
-- [ ] **[TASK-6.27.3]** Implementar traces distribuídos
+- [x] **[TASK-6.27.3]** Implementar traces distribuídos
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/infrastructure/tracing/tracing.module.ts (~60 linhas)
@@ -3883,7 +3893,7 @@ wolfgang-backoffice/
          • Jaeger/Zipkin integrável
       ```
 
-- [ ] **[TASK-6.27.4]** Implementar auditoria de operações
+- [x] **[TASK-6.27.4]** Implementar auditoria de operações
       ```
       📁 Arquivos:
          • Criar: backoffice-api/src/infrastructure/audit/audit.module.ts (~40 linhas)
@@ -3922,7 +3932,7 @@ wolfgang-backoffice/
 
 #### Tasks Detalhadas
 
-- [ ] **[TASK-6.28.1]** Criar runbooks de incidentes
+- [x] **[TASK-6.28.1]** Criar runbooks de incidentes
       ```
       📁 Arquivos:
          • Criar: infra/runbooks/database-issues.md (~100 linhas)
@@ -3941,7 +3951,7 @@ wolfgang-backoffice/
          • Escalation path
       ```
 
-- [ ] **[TASK-6.28.2]** Criar guia de deploy
+- [x] **[TASK-6.28.2]** Criar guia de deploy
       ```
       📁 Arquivos:
          • Criar: infra/deploy/README.md (~200 linhas)
@@ -3959,7 +3969,7 @@ wolfgang-backoffice/
          • Rollback procedure
       ```
 
-- [ ] **[TASK-6.28.3]** Atualizar documentação de arquitetura
+- [x] **[TASK-6.28.3]** Atualizar documentação de arquitetura
       ```
       📁 Arquivos:
          • Modificar: docs/architecture/*.md (revisão completa)
@@ -3977,7 +3987,7 @@ wolfgang-backoffice/
          • Dados dicionarizados
       ```
 
-- [ ] **[TASK-6.28.4]** Gerar API documentation completa
+- [x] **[TASK-6.28.4]** Gerar API documentation completa
       ```
       📁 Arquivos:
          • Criar: docs/api/openapi.json (~auto-generated)
@@ -4294,7 +4304,7 @@ FASE 6 (Produção)
 | `agent-runtime/src/modules/centurion/services/prompt_builder.py` | Service | Assembly de prompt | 2 |
 | `agent-runtime/src/modules/centurion/services/qualification_service.py` | Service | Regras qualificação | 2 |
 | `agent-runtime/src/modules/centurion/services/response_builder.py` | Service | Chunking | 2 |
-| `agent-runtime/src/modules/channels/services/whatsapp_sender.py` | Service | Envio WhatsApp | 2 |
+| `agent-runtime/src/modules/centurion/services/whatsapp_sender.py` | Service | Envio WhatsApp | 2 |
 | `agent-runtime/src/modules/channels/services/media_downloader.py` | Service | Download mídia | 2 |
 | `agent-runtime/src/modules/channels/services/stt_service.py` | Service | Speech-to-Text | 2 |
 | `agent-runtime/src/modules/channels/services/vision_service.py` | Service | Vision/OCR | 2 |
@@ -4423,4 +4433,3 @@ Este documento é **fonte de verdade** para o backlog. Atualize:
 ---
 
 **FIM DO BACKLOG DETALHADO**
-

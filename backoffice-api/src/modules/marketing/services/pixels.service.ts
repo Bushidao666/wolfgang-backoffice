@@ -181,7 +181,8 @@ export class PixelsService {
 
     const pixelId = normalizePixelId(String((pixel as any).pixel_id));
     const apiVersion = process.env.FACEBOOK_API_VERSION ?? "v20.0";
-    const endpoint = `https://graph.facebook.com/${apiVersion}/${encodeURIComponent(pixelId)}/events?access_token=${encodeURIComponent(token)}`;
+    const graphBaseUrl = (process.env.FACEBOOK_GRAPH_BASE_URL ?? "https://graph.facebook.com").replace(/\/+$/, "");
+    const endpoint = `${graphBaseUrl}/${apiVersion}/${encodeURIComponent(pixelId)}/events?access_token=${encodeURIComponent(token)}`;
 
     const now = Math.floor(Date.now() / 1000);
     const body = {
@@ -232,4 +233,3 @@ export class PixelsService {
     };
   }
 }
-

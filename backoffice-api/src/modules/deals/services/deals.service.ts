@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 
 import { NotFoundError, ValidationError } from "@wolfgang/contracts";
 
-import { PostgresService } from "../../../infrastructure/postgres/postgres.service";
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
 
 function ensureSchemaName(schemaName: unknown): string {
@@ -13,10 +12,7 @@ function ensureSchemaName(schemaName: unknown): string {
 
 @Injectable()
 export class DealsService {
-  constructor(
-    private readonly supabase: SupabaseService,
-    private readonly postgres: PostgresService,
-  ) {}
+  constructor(private readonly supabase: SupabaseService) {}
 
   private admin() {
     return this.supabase.getAdminClient();
@@ -36,88 +32,54 @@ export class DealsService {
 
   async list(companyId: string, filters: { status?: string; q?: string; from?: string; to?: string }) {
     const schema = await this.getCompanySchema(companyId);
-    const schemaIdent = `"${schema}"`;
 
-    const conditions: string[] = ["company_id = $1"];
-    const params: unknown[] = [companyId];
+    let query = this.admin()
+      .schema(schema)
+      .from("deals")
+      .select(
+        "id, company_id, core_lead_id, deal_full_name, deal_phone, deal_email, deal_status, deal_servico, deal_valor_contrato, created_at, updated_at",
+      )
+      .eq("company_id", companyId);
 
-    if (filters.status) {
-      params.push(filters.status);
-      conditions.push(`deal_status = $${params.length}`);
-    }
-
-    if (filters.from) {
-      params.push(filters.from);
-      conditions.push(`created_at >= $${params.length}`);
-    }
-
-    if (filters.to) {
-      params.push(filters.to);
-      conditions.push(`created_at <= $${params.length}`);
-    }
-
+    if (filters.status) query = query.eq("deal_status", filters.status);
+    if (filters.from) query = query.gte("created_at", filters.from);
+    if (filters.to) query = query.lte("created_at", filters.to);
     if (filters.q) {
-      params.push(`%${filters.q}%`);
-      const idx = params.length;
-      conditions.push(`(deal_full_name ilike $${idx} or deal_phone ilike $${idx} or deal_email ilike $${idx})`);
+      const pattern = `%${filters.q}%`;
+      query = query.or(`deal_full_name.ilike.${pattern},deal_phone.ilike.${pattern},deal_email.ilike.${pattern}`);
     }
 
-    try {
-      const { rows } = await this.postgres.query(
-        `select id, company_id, core_lead_id, deal_full_name, deal_phone, deal_email, deal_status, deal_servico, deal_valor_contrato, created_at, updated_at
-         from ${schemaIdent}.deals
-         where ${conditions.join(" and ")}
-         order by created_at desc`,
-        params,
-      );
-      return rows ?? [];
-    } catch (err) {
-      throw new ValidationError("Failed to list deals", { error: err instanceof Error ? err.message : String(err) });
-    }
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (error) throw new ValidationError("Failed to list deals", { error });
+    return data ?? [];
   }
 
   async get(companyId: string, dealId: string) {
     const schema = await this.getCompanySchema(companyId);
-    const schemaIdent = `"${schema}"`;
 
-    try {
-      const { rows } = await this.postgres.query(
-        `select *
-         from ${schemaIdent}.deals
-         where id = $1 and company_id = $2
-         limit 1`,
-        [dealId, companyId],
-      );
-      const row = rows?.[0];
-      if (!row) throw new NotFoundError("Deal not found");
-      return row;
-    } catch (err) {
-      if (err instanceof NotFoundError) throw err;
-      throw new ValidationError("Failed to load deal", { error: err instanceof Error ? err.message : String(err) });
-    }
+    const { data, error } = await this.admin()
+      .schema(schema)
+      .from("deals")
+      .select("*")
+      .eq("id", dealId)
+      .eq("company_id", companyId)
+      .maybeSingle();
+    if (error) throw new ValidationError("Failed to load deal", { error });
+    if (!data) throw new NotFoundError("Deal not found");
+    return data;
   }
 
   async stats(companyId: string) {
     const schema = await this.getCompanySchema(companyId);
-    const schemaIdent = `"${schema}"`;
+    const { data, error } = await this.admin().schema(schema).from("deals").select("deal_status").eq("company_id", companyId);
+    if (error) throw new ValidationError("Failed to load deal stats", { error });
 
-    try {
-      const { rows } = await this.postgres.query<{ deal_status: string | null }>(
-        `select deal_status
-         from ${schemaIdent}.deals
-         where company_id = $1`,
-        [companyId],
-      );
-
-      const counts: Record<string, number> = {};
-      for (const row of rows ?? []) {
-        const status = String(row.deal_status ?? "unknown");
-        counts[status] = (counts[status] ?? 0) + 1;
-      }
-      return { company_id: companyId, by_status: counts, total: (rows ?? []).length };
-    } catch (err) {
-      throw new ValidationError("Failed to load deal stats", { error: err instanceof Error ? err.message : String(err) });
+    const counts: Record<string, number> = {};
+    for (const row of data ?? []) {
+      const status = String((row as any)?.deal_status ?? "unknown");
+      counts[status] = (counts[status] ?? 0) + 1;
     }
+    return { company_id: companyId, by_status: counts, total: (data ?? []).length };
   }
 
   async timeline(companyId: string, dealId: string) {

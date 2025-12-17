@@ -1,0 +1,9 @@
+CONTRATO DE PRESTAÇÃO DE SERVIÇOS (E2E)
+
+Olá {{deal_full_name}},
+
+Este contrato refere-se ao serviço: {{deal_servico}}.
+Valor: {{deal_valor_contrato}}.
+
+Obrigado,
+Wolfgang
