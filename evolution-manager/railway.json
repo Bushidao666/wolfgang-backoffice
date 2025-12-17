@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile",
+    "dockerfilePath": "evolution-manager/Dockerfile",
     "watchPatterns": ["evolution-manager/**", "packages/**", "package.json"]
   },
   "deploy": {
