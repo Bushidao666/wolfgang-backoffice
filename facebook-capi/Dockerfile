@@ -16,5 +16,4 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/facebook-capi ./facebook-capi
 WORKDIR /app/facebook-capi
-EXPOSE 4004
 CMD ["node", "dist/main.js"]

@@ -16,5 +16,4 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/autentique-service ./autentique-service
 WORKDIR /app/autentique-service
-EXPOSE 4003
 CMD ["node", "dist/main.js"]

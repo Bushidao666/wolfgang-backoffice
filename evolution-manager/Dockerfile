@@ -16,5 +16,4 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/evolution-manager ./evolution-manager
 WORKDIR /app/evolution-manager
-EXPOSE 4002
 CMD ["node", "dist/main.js"]

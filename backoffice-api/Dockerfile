@@ -16,5 +16,4 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/backoffice-api ./backoffice-api
 WORKDIR /app/backoffice-api
-EXPOSE 4000
 CMD ["node", "dist/main.js"]
