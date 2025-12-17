@@ -51,6 +51,7 @@ Regras:
 | `message.sent` | agent-runtime | evolution-manager |
 | `lead.created` | agent-runtime | facebook-capi, backoffice-api |
 | `lead.qualified` | agent-runtime | backoffice-api, facebook-capi |
+| `debounce.timer` | agent-runtime | - (observabilidade / future consumers) |
 | `contract.created` | autentique-service | backoffice-api |
 | `contract.signed` | autentique-service | facebook-capi, backoffice-api |
 | `instance.status` | evolution-manager | backoffice-api |
@@ -159,6 +160,26 @@ Emitido quando o lead atinge critérios de qualificação (score e/ou rules).
 ### Idempotência
 
 - Chave recomendada: `lead_id + qualified_at (trunc)`, mantendo apenas o primeiro qualificado.
+
+---
+
+## Evento: `debounce.timer`
+
+### Descrição
+
+Emitido quando uma conversa entra/atualiza o estado de debounce (acumulando mensagens). Útil para observabilidade e potenciais consumers futuros.
+
+### Payload (v1)
+
+```json
+{
+  "conversation_id": "conv_...",
+  "lead_id": "lead_...",
+  "instance_id": "ins_...",
+  "debounce_until": "2025-12-16T12:00:00.000Z",
+  "pending_count": 2
+}
+```
 
 ---
 

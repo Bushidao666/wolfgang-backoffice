@@ -1,0 +1,3612 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/metrics": {
+      "get": {
+        "operationId": "PrometheusController_metrics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logout"
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "operationId": "AuthController_forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Forgot password requested"
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "operationId": "AuthController_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset"
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user"
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/companies": {
+      "get": {
+        "operationId": "CompaniesController_list",
+        "summary": "Lista empresas (holding)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Companies"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "CompaniesController_create",
+        "summary": "Cria empresa e provisiona schema",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompanyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Companies"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/companies/{id}": {
+      "get": {
+        "operationId": "CompaniesController_get",
+        "summary": "Detalhe da empresa",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Companies"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "CompaniesController_update",
+        "summary": "Atualiza empresa",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Companies"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "CompaniesController_archive",
+        "summary": "Arquiva empresa (super_admin)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Companies"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/companies/{id}/users": {
+      "get": {
+        "operationId": "CompanyUsersController_list",
+        "summary": "Lista usuários da empresa",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Companies"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "CompanyUsersController_add",
+        "summary": "Adiciona usuário à empresa (por email)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Companies"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/companies/{id}/users/{userId}": {
+      "delete": {
+        "operationId": "CompanyUsersController_remove",
+        "summary": "Remove usuário da empresa",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Companies"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/centurions": {
+      "get": {
+        "operationId": "CenturionsController_list",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CenturionResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Centurions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "CenturionsController_create",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCenturionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CenturionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Centurions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/centurions/{id}": {
+      "get": {
+        "operationId": "CenturionsController_get",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CenturionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Centurions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "CenturionsController_update",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCenturionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CenturionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Centurions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "CenturionsController_delete",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          }
+        },
+        "tags": [
+          "Centurions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/centurions/{id}/test": {
+      "post": {
+        "operationId": "CenturionTestController_test",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestCenturionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Test response"
+          }
+        },
+        "tags": [
+          "Centurions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/contracts/templates": {
+      "get": {
+        "operationId": "ContractTemplatesController_list",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ContractTemplates"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ContractTemplatesController_create",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContractTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "ContractTemplates"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/contracts/templates/{id}": {
+      "put": {
+        "operationId": "ContractTemplatesController_update",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContractTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ContractTemplates"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ContractTemplatesController_remove",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ContractTemplates"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/contracts": {
+      "get": {
+        "operationId": "ContractsController_list",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ContractsController_create",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContractDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contract created/sent"
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/contracts/{id}": {
+      "get": {
+        "operationId": "ContractsController_get",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/contracts/{id}/download": {
+      "get": {
+        "operationId": "ContractsController_download",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed URL to download the signed contract (when available)"
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/deals": {
+      "get": {
+        "operationId": "DealsController_list",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DealResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Deals"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/deals/stats": {
+      "get": {
+        "operationId": "DealsController_stats",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Deals"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/deals/{id}": {
+      "get": {
+        "operationId": "DealsController_get",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Deals"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/deals/{id}/timeline": {
+      "get": {
+        "operationId": "DealsController_timeline",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Deals"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/centurions/{id}/followup-rules": {
+      "get": {
+        "operationId": "FollowupsController_list",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "FollowUps"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "FollowupsController_create",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFollowupRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "FollowUps"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/centurions/{id}/followup-rules/{ruleId}": {
+      "put": {
+        "operationId": "FollowupsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ruleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFollowupRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "FollowUps"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "FollowupsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ruleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "FollowUps"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/knowledge-base/documents": {
+      "get": {
+        "operationId": "KbController_list",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KnowledgeBase"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "KbController_upload",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Uploaded"
+          }
+        },
+        "tags": [
+          "KnowledgeBase"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/knowledge-base/documents/{id}/chunks": {
+      "get": {
+        "operationId": "KbController_listChunks",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KnowledgeBase"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/knowledge-base/documents/{id}": {
+      "delete": {
+        "operationId": "KbController_remove",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KnowledgeBase"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/leads": {
+      "get": {
+        "operationId": "LeadsController_list",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "whatsapp",
+                "instagram",
+                "telegram"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "per_page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 50,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Leads"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/leads/{id}": {
+      "get": {
+        "operationId": "LeadsController_get",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Leads"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/leads/{id}/timeline": {
+      "get": {
+        "operationId": "LeadsController_timeline",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadTimelineResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Leads"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/centurions/{id}/mcp-servers": {
+      "get": {
+        "operationId": "McpController_list",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MCP"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "McpController_create",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMcpServerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "MCP"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/centurions/{id}/mcp-servers/{serverId}": {
+      "delete": {
+        "operationId": "McpController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serverId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MCP"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/pixels": {
+      "get": {
+        "operationId": "PixelsController_list",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PixelResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pixels"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "PixelsController_create",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePixelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PixelResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pixels"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/pixels/{id}": {
+      "patch": {
+        "operationId": "PixelsController_update",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePixelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PixelResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pixels"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "PixelsController_remove",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Pixels"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/pixels/{id}/events": {
+      "get": {
+        "operationId": "PixelsController_events",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Pixels"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/pixels/{id}/test": {
+      "post": {
+        "operationId": "PixelsController_test",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Pixels"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/metrics/summary": {
+      "get": {
+        "operationId": "MetricsController_summary",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsSummaryDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Metrics"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/metrics/conversion": {
+      "get": {
+        "operationId": "MetricsController_conversion",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsConversionDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Metrics"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/metrics/by-centurion": {
+      "get": {
+        "operationId": "MetricsController_byCenturion",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsByCenturionDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Metrics"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/metrics/timeline": {
+      "get": {
+        "operationId": "MetricsController_timeline",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsTimelineDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Metrics"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/metrics/overview": {
+      "get": {
+        "operationId": "MetricsController_overview",
+        "parameters": [
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Metrics"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/centurions/{id}/tools": {
+      "get": {
+        "operationId": "ToolsController_list",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ToolResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Tools"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ToolsController_create",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateToolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Tools"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/centurions/{id}/tools/{toolId}": {
+      "patch": {
+        "operationId": "ToolsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "toolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Tools"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "ToolsController_replace",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "toolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateToolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Tools"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ToolsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "toolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-company-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          }
+        },
+        "tags": [
+          "Tools"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "HealthController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Service is healthy"
+          }
+        },
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Wolfgang Backoffice API",
+    "description": "API principal do backoffice multi-tenant",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@empresa.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "senha-forte"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "AuthResponseDto": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          },
+          "expires_in": {
+            "type": "number"
+          },
+          "token_type": {
+            "type": "string"
+          },
+          "user": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token",
+          "expires_in",
+          "token_type"
+        ]
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateCompanyDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateCompanyDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AddUserDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CenturionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "personality": {
+            "type": "object"
+          },
+          "qualification_rules": {
+            "type": "object"
+          },
+          "can_send_audio": {
+            "type": "boolean"
+          },
+          "can_send_image": {
+            "type": "boolean"
+          },
+          "can_send_video": {
+            "type": "boolean"
+          },
+          "can_process_audio": {
+            "type": "boolean"
+          },
+          "can_process_image": {
+            "type": "boolean"
+          },
+          "message_chunking_enabled": {
+            "type": "boolean"
+          },
+          "chunk_delay_ms": {
+            "type": "number"
+          },
+          "debounce_wait_ms": {
+            "type": "number"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "max_retries": {
+            "type": "object"
+          },
+          "total_conversations": {
+            "type": "object"
+          },
+          "total_qualified": {
+            "type": "object"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "company_id",
+          "name",
+          "slug",
+          "prompt",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "CreateCenturionDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug único por empresa (ex: sdr_principal)"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "System prompt principal"
+          },
+          "personality": {
+            "type": "object"
+          },
+          "qualification_rules": {
+            "type": "object"
+          },
+          "can_send_audio": {
+            "type": "boolean"
+          },
+          "can_send_image": {
+            "type": "boolean"
+          },
+          "can_send_video": {
+            "type": "boolean"
+          },
+          "can_process_audio": {
+            "type": "boolean"
+          },
+          "can_process_image": {
+            "type": "boolean"
+          },
+          "message_chunking_enabled": {
+            "type": "boolean"
+          },
+          "chunk_delay_ms": {
+            "type": "number",
+            "default": 1500
+          },
+          "debounce_wait_ms": {
+            "type": "number",
+            "default": 3000
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "max_retries": {
+            "type": "number",
+            "default": 3
+          }
+        },
+        "required": [
+          "name",
+          "slug",
+          "prompt"
+        ]
+      },
+      "UpdateCenturionDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "personality": {
+            "type": "object"
+          },
+          "qualification_rules": {
+            "type": "object"
+          },
+          "can_send_audio": {
+            "type": "boolean"
+          },
+          "can_send_image": {
+            "type": "boolean"
+          },
+          "can_send_video": {
+            "type": "boolean"
+          },
+          "can_process_audio": {
+            "type": "boolean"
+          },
+          "can_process_image": {
+            "type": "boolean"
+          },
+          "message_chunking_enabled": {
+            "type": "boolean"
+          },
+          "chunk_delay_ms": {
+            "type": "number"
+          },
+          "debounce_wait_ms": {
+            "type": "number"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "max_retries": {
+            "type": "number"
+          }
+        }
+      },
+      "TestCenturionDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Mensagem do usuário"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "CreateContractTemplateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "default": "general"
+          },
+          "variables": {
+            "type": "string",
+            "description": "JSON array of variables (ex: [{name, type, required}])"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CreateContractDto": {
+        "type": "object",
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "description": "Contract template id"
+          },
+          "deal_id": {
+            "type": "string",
+            "description": "Deal id (tenant schema <schema>.deals.id)"
+          },
+          "value": {
+            "type": "number",
+            "description": "Contract value (defaults from deal if omitted)"
+          },
+          "currency": {
+            "type": "string",
+            "default": "BRL"
+          },
+          "signer_name": {
+            "type": "string",
+            "description": "Signer name (optional override)"
+          },
+          "signer_email": {
+            "type": "string",
+            "description": "Signer email (optional override)"
+          },
+          "signer_phone": {
+            "type": "string",
+            "description": "Signer phone (optional override)"
+          },
+          "contract_data": {
+            "type": "object",
+            "description": "Extra data for template rendering (merged with deal/lead fields)"
+          }
+        },
+        "required": [
+          "template_id",
+          "deal_id"
+        ]
+      },
+      "DealResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "company_id": {
+            "type": "string"
+          },
+          "core_lead_id": {
+            "type": "string"
+          },
+          "deal_full_name": {
+            "type": "object"
+          },
+          "deal_phone": {
+            "type": "object"
+          },
+          "deal_email": {
+            "type": "object"
+          },
+          "deal_status": {
+            "type": "object"
+          },
+          "deal_servico": {
+            "type": "object"
+          },
+          "deal_valor_contrato": {
+            "type": "object"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "company_id",
+          "core_lead_id",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "CreateFollowupRuleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome único da regra (por Centurion)"
+          },
+          "inactivity_hours": {
+            "type": "number",
+            "description": "Horas de inatividade para disparar follow-up",
+            "default": 24
+          },
+          "template": {
+            "type": "string",
+            "description": "Template base da mensagem (será refinado pelo LLM, quando disponível)"
+          },
+          "max_attempts": {
+            "type": "number",
+            "default": 1
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "inactivity_hours",
+          "template"
+        ]
+      },
+      "UploadDocumentDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Título exibido do documento (default: nome do arquivo)"
+          }
+        }
+      },
+      "LeadResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "name": {
+            "type": "object"
+          },
+          "email": {
+            "type": "object"
+          },
+          "cpf": {
+            "type": "object"
+          },
+          "lifecycle_stage": {
+            "type": "string"
+          },
+          "is_qualified": {
+            "type": "boolean"
+          },
+          "qualification_score": {
+            "type": "object"
+          },
+          "qualification_data": {
+            "type": "object"
+          },
+          "centurion_id": {
+            "type": "object",
+            "format": "uuid"
+          },
+          "pixel_config_id": {
+            "type": "object",
+            "format": "uuid"
+          },
+          "utm_campaign": {
+            "type": "object"
+          },
+          "utm_source": {
+            "type": "object"
+          },
+          "utm_medium": {
+            "type": "object"
+          },
+          "utm_term": {
+            "type": "object"
+          },
+          "utm_content": {
+            "type": "object"
+          },
+          "fb_data": {
+            "type": "object"
+          },
+          "first_contact_at": {
+            "type": "object"
+          },
+          "last_contact_at": {
+            "type": "object"
+          },
+          "qualified_at": {
+            "type": "object"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "company_id",
+          "phone",
+          "lifecycle_stage",
+          "is_qualified",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "LeadListResponseDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "number"
+          },
+          "per_page": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeadResponseDto"
+            }
+          }
+        },
+        "required": [
+          "page",
+          "per_page",
+          "total",
+          "data"
+        ]
+      },
+      "LeadTimelineMessageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "inbound",
+              "outbound"
+            ]
+          },
+          "content_type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "audio",
+              "image",
+              "video",
+              "document"
+            ]
+          },
+          "content": {
+            "type": "object"
+          },
+          "audio_transcription": {
+            "type": "object"
+          },
+          "image_description": {
+            "type": "object"
+          },
+          "channel_message_id": {
+            "type": "object"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "conversation_id",
+          "direction",
+          "content_type",
+          "created_at"
+        ]
+      },
+      "LeadTimelineResponseDto": {
+        "type": "object",
+        "properties": {
+          "lead_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "total": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "offset": {
+            "type": "number"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeadTimelineMessageDto"
+            }
+          }
+        },
+        "required": [
+          "lead_id",
+          "company_id",
+          "total",
+          "limit",
+          "offset",
+          "messages"
+        ]
+      },
+      "CreateMcpServerDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome amigável do server (ex: crm-tools)"
+          },
+          "server_url": {
+            "type": "string",
+            "description": "Base URL do MCP server (SSE/HTTP)",
+            "example": "http://localhost:8787"
+          },
+          "auth_type": {
+            "type": "string",
+            "description": "bearer|api_key|basic|none"
+          },
+          "auth_config": {
+            "type": "object"
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "server_url"
+        ]
+      },
+      "PixelResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "company_id": {
+            "type": "string"
+          },
+          "pixel_id": {
+            "type": "string"
+          },
+          "meta_test_event_code": {
+            "type": "object"
+          },
+          "domain": {
+            "type": "object"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "has_access_token": {
+            "type": "boolean",
+            "description": "Whether an access token is configured (token itself is never returned)"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "company_id",
+          "pixel_id",
+          "is_active",
+          "has_access_token",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "CreatePixelDto": {
+        "type": "object",
+        "properties": {
+          "pixel_id": {
+            "type": "string",
+            "description": "Meta Pixel ID (digits)"
+          },
+          "meta_access_token": {
+            "type": "string",
+            "description": "Meta access token (will be stored encrypted)"
+          },
+          "meta_test_event_code": {
+            "type": "string",
+            "description": "Optional test event code (Meta Events Manager > Test events)"
+          },
+          "domain": {
+            "type": "string",
+            "description": "Optional domain/source URL (ex: https://example.com)"
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "pixel_id",
+          "meta_access_token"
+        ]
+      },
+      "UpdatePixelDto": {
+        "type": "object",
+        "properties": {
+          "pixel_id": {
+            "type": "string",
+            "description": "Meta Pixel ID (digits)"
+          },
+          "meta_access_token": {
+            "type": "string",
+            "description": "Meta access token (will be stored encrypted)"
+          },
+          "meta_test_event_code": {
+            "type": "string",
+            "description": "Optional test event code"
+          },
+          "domain": {
+            "type": "string",
+            "description": "Optional domain/source URL"
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MetricsSummaryDto": {
+        "type": "object",
+        "properties": {
+          "company_id": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "total_leads": {
+            "type": "number"
+          },
+          "by_stage": {
+            "type": "object",
+            "description": "Leads por lifecycle_stage"
+          },
+          "qualified_leads": {
+            "type": "number"
+          },
+          "conversion_rate": {
+            "type": "number",
+            "description": "qualified_leads / total_leads (0..1)"
+          },
+          "avg_qualification_seconds": {
+            "type": "number",
+            "description": "Tempo médio (segundos) até qualificação"
+          }
+        },
+        "required": [
+          "company_id",
+          "from",
+          "to",
+          "total_leads",
+          "by_stage",
+          "qualified_leads",
+          "conversion_rate",
+          "avg_qualification_seconds"
+        ]
+      },
+      "MetricsConversionDto": {
+        "type": "object",
+        "properties": {
+          "company_id": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "funnel": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "company_id",
+          "from",
+          "to",
+          "funnel"
+        ]
+      },
+      "MetricsByCenturionItemDto": {
+        "type": "object",
+        "properties": {
+          "centurion_id": {
+            "type": "string"
+          },
+          "centurion_name": {
+            "type": "string"
+          },
+          "total_leads": {
+            "type": "number"
+          },
+          "qualified_leads": {
+            "type": "number"
+          },
+          "conversion_rate": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "centurion_id",
+          "centurion_name",
+          "total_leads",
+          "qualified_leads",
+          "conversion_rate"
+        ]
+      },
+      "MetricsByCenturionDto": {
+        "type": "object",
+        "properties": {
+          "company_id": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricsByCenturionItemDto"
+            }
+          }
+        },
+        "required": [
+          "company_id",
+          "from",
+          "to",
+          "items"
+        ]
+      },
+      "MetricsTimelinePointDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "YYYY-MM-DD"
+          },
+          "leads_created": {
+            "type": "number"
+          },
+          "leads_qualified": {
+            "type": "number"
+          },
+          "contracts_signed": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "leads_created",
+          "leads_qualified",
+          "contracts_signed"
+        ]
+      },
+      "MetricsTimelineDto": {
+        "type": "object",
+        "properties": {
+          "company_id": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricsTimelinePointDto"
+            }
+          }
+        },
+        "required": [
+          "company_id",
+          "from",
+          "to",
+          "points"
+        ]
+      },
+      "ToolResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "centurion_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tool_name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "object"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "headers": {
+            "type": "object"
+          },
+          "auth_type": {
+            "type": "object"
+          },
+          "auth_config": {
+            "type": "object"
+          },
+          "input_schema": {
+            "type": "object"
+          },
+          "output_schema": {
+            "type": "object"
+          },
+          "timeout_ms": {
+            "type": "number"
+          },
+          "retry_count": {
+            "type": "number"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "company_id",
+          "centurion_id",
+          "tool_name",
+          "endpoint",
+          "method",
+          "headers",
+          "auth_config",
+          "input_schema",
+          "timeout_ms",
+          "retry_count",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "CreateToolDto": {
+        "type": "object",
+        "properties": {
+          "tool_name": {
+            "type": "string",
+            "description": "Nome único da tool (por Centurion)"
+          },
+          "description": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string",
+            "description": "Endpoint HTTP para execução"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE"
+            ],
+            "default": "POST"
+          },
+          "headers": {
+            "type": "object"
+          },
+          "auth_type": {
+            "type": "string",
+            "description": "bearer|api_key|basic|none"
+          },
+          "auth_config": {
+            "type": "object"
+          },
+          "input_schema": {
+            "type": "object",
+            "description": "JSON Schema de input"
+          },
+          "output_schema": {
+            "type": "object",
+            "description": "JSON Schema de output (opcional)"
+          },
+          "timeout_ms": {
+            "type": "number",
+            "default": 10000
+          },
+          "retry_count": {
+            "type": "number",
+            "default": 1
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "tool_name",
+          "endpoint",
+          "method",
+          "input_schema"
+        ]
+      }
+    }
+  }
+}

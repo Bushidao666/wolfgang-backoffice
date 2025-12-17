@@ -31,12 +31,12 @@ Serviços:
 
 ## Testes
 
-- `npm -w @wolfgang/contracts test`
-- `npm -w @wolfgang/backoffice-api test`
-- `cd agent-runtime && python3 -m pip install -r requirements.txt && pytest`
+- Unit (workspace): `npm test`
+- E2E (Playwright): `npm run e2e`
+- Agent Runtime: `cd agent-runtime && poetry install && poetry run pytest`
+- OpenAPI: `npm -w @wolfgang/backoffice-api run openapi:generate`
 
 ## Documentação
 
 - Backlog: `BACKLOG.md`, `BACKLOG_DETALHADO.md`
 - Catálogo de eventos: `docs/architecture/event-catalog.md`
-# wolfgang-backoffice

@@ -79,7 +79,10 @@ describe("RLS (Supabase)", () => {
 
     const templatesA = await clientA.schema("core").from("contract_templates").select("company_id");
     expect(templatesA.error).toBeNull();
-    expect((templatesA.data ?? []).length).toBe(2);
+    const templateCompanyIds = (templatesA.data ?? []).map((r: any) => (r ? r.company_id : null));
+    expect(templateCompanyIds).toContain(null);
+    expect(templateCompanyIds).toContain(companyA);
+    expect(templateCompanyIds).not.toContain(companyB);
 
     const emailAdmin = `admin_${randomUUID().slice(0, 6)}@example.com`;
     const adminUser = await admin.auth.admin.createUser({ email: emailAdmin, password, email_confirm: true });
@@ -92,7 +95,8 @@ describe("RLS (Supabase)", () => {
 
     const leadsAdmin = await clientAdmin.schema("core").from("leads").select("company_id");
     expect(leadsAdmin.error).toBeNull();
-    expect((leadsAdmin.data ?? []).length).toBe(2);
+    const adminCompanyIds = new Set((leadsAdmin.data ?? []).map((r: any) => (r ? r.company_id : null)));
+    expect(adminCompanyIds.has(companyA)).toBe(true);
+    expect(adminCompanyIds.has(companyB)).toBe(true);
   });
 });
-

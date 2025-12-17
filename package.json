@@ -10,8 +10,8 @@
     "packages/*"
   ],
   "scripts": {
-    "lint": "npm -ws --if-present run lint",
-    "test": "npm -ws --if-present run test",
+    "lint": "npm --workspaces --if-present run lint",
+    "test": "npm --workspaces --if-present run test",
     "e2e": "playwright test -c e2e/playwright.config.ts"
   },
   "devDependencies": {

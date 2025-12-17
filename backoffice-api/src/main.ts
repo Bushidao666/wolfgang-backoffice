@@ -1,11 +1,12 @@
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
 
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/global-exception.filter";
 import { LoggerService } from "./common/logging/logger.service";
+import { buildSwaggerConfig } from "./swagger";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -29,13 +30,7 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new GlobalExceptionFilter(app.get(LoggerService)));
 
-  const config = new DocumentBuilder()
-    .setTitle("Wolfgang Backoffice API")
-    .setDescription("API principal do backoffice multi-tenant")
-    .setVersion("0.1.0")
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, buildSwaggerConfig());
   SwaggerModule.setup("api/docs", app, document, {
     swaggerOptions: { persistAuthorization: true },
   });

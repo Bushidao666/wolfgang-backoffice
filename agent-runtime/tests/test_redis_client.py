@@ -80,6 +80,30 @@ async def test_redis_client_connect_get_set_delete_close(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_redis_client_get_json_and_set_json(monkeypatch):
+    fake = _FakeRedis()
+    monkeypatch.setattr("common.infrastructure.cache.redis_client.redis.from_url", lambda url, decode_responses=True: fake)  # noqa: ARG005
+
+    client = RedisClient("redis://example")
+    await client.connect()
+
+    await client.set("k1", '{"a": 1}')
+    assert await client.get_json("k1") == {"a": 1}
+
+    await client.set("k2", "{bad")
+    assert await client.get_json("k2") is None
+
+    await client.set_json("k3", {"x": "y"})
+    assert await client.get_json("k3") == {"x": "y"}
+
+
+def test_redis_client_client_property_requires_connect():
+    client = RedisClient("redis://example")
+    with pytest.raises(RuntimeError):
+        _ = client.client
+
+
+@pytest.mark.asyncio
 async def test_redis_client_subscribe_invokes_handler(monkeypatch):
     messages = [
         {"type": "subscribe", "data": None},
@@ -106,4 +130,3 @@ async def test_redis_client_subscribe_invokes_handler(monkeypatch):
 
     await asyncio.wait_for(run(), timeout=1.0)
     assert seen == ["hello", "world"]
-
