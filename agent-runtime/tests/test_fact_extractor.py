@@ -37,12 +37,14 @@ async def test_extract_fallback_parses_common_fields_and_dedupes():
 async def test_extract_uses_openai_when_api_key_is_set(monkeypatch):
     import types
 
-    settings = types.SimpleNamespace(
-        openai_api_key="k",
-        openai_base_url="https://example.test",
-        openai_chat_model="gpt",
-    )
-    monkeypatch.setattr("modules.memory.services.fact_extractor.get_settings", lambda: settings)
+    class _FakeOpenAIResolver:
+        def __init__(self, *args, **kwargs):  # noqa: ARG002
+            pass
+
+        async def resolve_optional(self, *, company_id: str):  # noqa: ARG002
+            return types.SimpleNamespace(api_key="k", base_url="https://example.test", chat_model="gpt")
+
+    monkeypatch.setattr("modules.memory.services.fact_extractor.OpenAIResolver", _FakeOpenAIResolver)
 
     class _Choice:
         message = types.SimpleNamespace(content='[{"text":"Gosta de pizza","category":"preference"}]')
@@ -63,7 +65,7 @@ async def test_extract_uses_openai_when_api_key_is_set(monkeypatch):
 
     monkeypatch.setattr("modules.memory.services.fact_extractor.AsyncOpenAI", _FakeOpenAI)
 
-    extractor = FactExtractor()
+    extractor = FactExtractor(db=object())  # type: ignore[arg-type]
     facts = await extractor.extract(company_id="c1", conversation_text="conversa")
 
     assert len(facts) == 1
@@ -75,12 +77,14 @@ async def test_extract_uses_openai_when_api_key_is_set(monkeypatch):
 async def test_extract_falls_back_when_openai_returns_invalid_json(monkeypatch):
     import types
 
-    settings = types.SimpleNamespace(
-        openai_api_key="k",
-        openai_base_url="https://example.test",
-        openai_chat_model="gpt",
-    )
-    monkeypatch.setattr("modules.memory.services.fact_extractor.get_settings", lambda: settings)
+    class _FakeOpenAIResolver:
+        def __init__(self, *args, **kwargs):  # noqa: ARG002
+            pass
+
+        async def resolve_optional(self, *, company_id: str):  # noqa: ARG002
+            return types.SimpleNamespace(api_key="k", base_url="https://example.test", chat_model="gpt")
+
+    monkeypatch.setattr("modules.memory.services.fact_extractor.OpenAIResolver", _FakeOpenAIResolver)
 
     class _Choice:
         message = types.SimpleNamespace(content="not json")
@@ -101,6 +105,6 @@ async def test_extract_falls_back_when_openai_returns_invalid_json(monkeypatch):
 
     monkeypatch.setattr("modules.memory.services.fact_extractor.AsyncOpenAI", _FakeOpenAI)
 
-    extractor = FactExtractor()
+    extractor = FactExtractor(db=object())  # type: ignore[arg-type]
     facts = await extractor.extract(company_id="c1", conversation_text="email test@example.com")
     assert any("Email informado" in f.text for f in facts)

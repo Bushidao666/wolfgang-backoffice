@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from common.config.settings import get_settings
 from common.infrastructure.database.supabase_client import SupabaseDb
 
 from .resolver import CompanyIntegrationResolver
@@ -32,8 +31,6 @@ class OpenAIResolver:
         self._integrations = CompanyIntegrationResolver(db, cache_ttl_s=cache_ttl_s)
 
     async def resolve_optional(self, *, company_id: str) -> OpenAIResolved | None:
-        settings = get_settings()
-
         try:
             resolved = await self._integrations.resolve(company_id=company_id, provider="openai")
         except Exception:
@@ -42,25 +39,15 @@ class OpenAIResolver:
         if resolved:
             api_key = _read_str(resolved.secrets, "api_key") or ""
             if api_key:
-                base_url = _read_str(resolved.config, "base_url", "api_base_url") or settings.openai_base_url
+                base_url = _read_str(resolved.config, "base_url", "api_base_url") or "https://api.openai.com/v1"
                 return OpenAIResolved(
                     api_key=api_key,
                     base_url=base_url,
-                    chat_model=_read_str(resolved.config, "chat_model") or settings.openai_chat_model,
-                    vision_model=_read_str(resolved.config, "vision_model") or settings.openai_vision_model,
-                    stt_model=_read_str(resolved.config, "stt_model") or settings.openai_stt_model,
-                    embedding_model=_read_str(resolved.config, "embedding_model") or settings.openai_embedding_model,
+                    chat_model=_read_str(resolved.config, "chat_model") or "gpt-4o-mini",
+                    vision_model=_read_str(resolved.config, "vision_model") or "gpt-4o-mini",
+                    stt_model=_read_str(resolved.config, "stt_model") or "whisper-1",
+                    embedding_model=_read_str(resolved.config, "embedding_model") or "text-embedding-3-small",
                 )
-
-        if settings.openai_api_key:
-            return OpenAIResolved(
-                api_key=settings.openai_api_key,
-                base_url=settings.openai_base_url,
-                chat_model=settings.openai_chat_model,
-                vision_model=settings.openai_vision_model,
-                stt_model=settings.openai_stt_model,
-                embedding_model=settings.openai_embedding_model,
-            )
 
         return None
 
@@ -69,4 +56,3 @@ class OpenAIResolver:
         if not resolved:
             raise RuntimeError("OpenAI integration is not configured for this company")
         return resolved
-

@@ -69,46 +69,70 @@ async def test_media_downloader_downloads_bytes_and_content_type(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_stt_requires_openai_key(monkeypatch):
-    settings = types.SimpleNamespace(openai_api_key=None)
-    monkeypatch.setattr("modules.channels.services.stt_service.get_settings", lambda: settings)
+async def test_stt_requires_openai_integration(monkeypatch):
+    class _FakeOpenAIResolver:
+        def __init__(self, *args, **kwargs):  # noqa: ARG002
+            pass
 
-    svc = SpeechToTextService()
+        async def resolve_optional(self, *, company_id: str):  # noqa: ARG002
+            return None
+
+    monkeypatch.setattr("modules.channels.services.stt_service.OpenAIResolver", _FakeOpenAIResolver)
+
+    svc = SpeechToTextService(db=object())  # type: ignore[arg-type]
     with pytest.raises(RuntimeError):
         await svc.transcribe(company_id="c1", audio_bytes=b"x")
 
 
 @pytest.mark.asyncio
 async def test_stt_transcribes_via_http(monkeypatch):
-    settings = types.SimpleNamespace(openai_api_key="k", openai_base_url="https://example.test", openai_stt_model="whisper-1")
-    monkeypatch.setattr("modules.channels.services.stt_service.get_settings", lambda: settings)
+    class _FakeOpenAIResolver:
+        def __init__(self, *args, **kwargs):  # noqa: ARG002
+            pass
+
+        async def resolve_optional(self, *, company_id: str):  # noqa: ARG002
+            return types.SimpleNamespace(api_key="k", base_url="https://example.test", stt_model="whisper-1")
+
+    monkeypatch.setattr("modules.channels.services.stt_service.OpenAIResolver", _FakeOpenAIResolver)
 
     fake = _FakeAsyncClient().with_post_response(_FakeResponse(json_data={"text": " ok "}))
     monkeypatch.setattr("modules.channels.services.stt_service.httpx.AsyncClient", lambda *a, **k: fake)  # noqa: ARG005
 
-    svc = SpeechToTextService()
+    svc = SpeechToTextService(db=object())  # type: ignore[arg-type]
     out = await svc.transcribe(company_id="c1", audio_bytes=b"x", filename="a.ogg")
     assert out == "ok"
 
 
 @pytest.mark.asyncio
-async def test_vision_requires_openai_key(monkeypatch):
-    settings = types.SimpleNamespace(openai_api_key=None)
-    monkeypatch.setattr("modules.channels.services.vision_service.get_settings", lambda: settings)
+async def test_vision_requires_openai_integration(monkeypatch):
+    class _FakeOpenAIResolver:
+        def __init__(self, *args, **kwargs):  # noqa: ARG002
+            pass
 
-    svc = VisionService()
+        async def resolve_optional(self, *, company_id: str):  # noqa: ARG002
+            return None
+
+    monkeypatch.setattr("modules.channels.services.vision_service.OpenAIResolver", _FakeOpenAIResolver)
+
+    svc = VisionService(db=object())  # type: ignore[arg-type]
     with pytest.raises(RuntimeError):
         await svc.describe(company_id="c1", image_bytes=b"x")
 
 
 @pytest.mark.asyncio
 async def test_vision_describes_via_http(monkeypatch):
-    settings = types.SimpleNamespace(openai_api_key="k", openai_base_url="https://example.test", openai_vision_model="gpt-4o-mini")
-    monkeypatch.setattr("modules.channels.services.vision_service.get_settings", lambda: settings)
+    class _FakeOpenAIResolver:
+        def __init__(self, *args, **kwargs):  # noqa: ARG002
+            pass
+
+        async def resolve_optional(self, *, company_id: str):  # noqa: ARG002
+            return types.SimpleNamespace(api_key="k", base_url="https://example.test", vision_model="gpt-4o-mini")
+
+    monkeypatch.setattr("modules.channels.services.vision_service.OpenAIResolver", _FakeOpenAIResolver)
 
     fake = _FakeAsyncClient().with_post_response(_FakeResponse(json_data={"choices": [{"message": {"content": " desc "}}]}))
     monkeypatch.setattr("modules.channels.services.vision_service.httpx.AsyncClient", lambda *a, **k: fake)  # noqa: ARG005
 
-    svc = VisionService()
+    svc = VisionService(db=object())  # type: ignore[arg-type]
     out = await svc.describe(company_id="c1", image_bytes=b"x", mime_type="image/png")
     assert out == "desc"

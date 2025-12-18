@@ -36,11 +36,7 @@ export class AutentiqueClient {
   private readonly defaultBaseUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    const cfg = this.configService.get<AutentiqueConfig>("autentique") ?? {
-      apiKey: process.env.AUTENTIQUE_API_KEY ?? "",
-      baseUrl: process.env.AUTENTIQUE_BASE_URL ?? "https://api.autentique.com.br",
-      webhookSecret: process.env.AUTENTIQUE_WEBHOOK_SECRET ?? "",
-    };
+    const cfg = this.configService.get<AutentiqueConfig>("autentique") ?? { baseUrl: "https://api.autentique.com.br" };
     this.defaultBaseUrl = cfg.baseUrl ?? "https://api.autentique.com.br";
   }
 

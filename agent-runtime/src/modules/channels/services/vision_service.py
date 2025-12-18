@@ -5,7 +5,6 @@ import logging
 
 import httpx
 
-from common.config.settings import get_settings
 from common.infrastructure.database.supabase_client import SupabaseDb
 from common.infrastructure.integrations.openai_resolver import OpenAIResolver
 
@@ -25,12 +24,7 @@ class VisionService:
             base_url = resolved.base_url
             model = resolved.vision_model
         else:
-            settings = get_settings()
-            if not settings.openai_api_key:
-                raise RuntimeError("OPENAI_API_KEY is required for vision")
-            api_key = settings.openai_api_key
-            base_url = settings.openai_base_url
-            model = settings.openai_vision_model
+            raise RuntimeError("SupabaseDb is required for vision (no env fallback)")
 
         b64 = base64.b64encode(image_bytes).decode("ascii")
         data_url = f"data:{mime_type};base64,{b64}"

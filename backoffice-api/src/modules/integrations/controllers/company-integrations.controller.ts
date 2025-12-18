@@ -72,7 +72,7 @@ export class CompanyIntegrationsController {
     try {
       if (p === "openai") {
         const apiKey = typeof resolved.secrets["api_key"] === "string" ? (resolved.secrets["api_key"] as string) : "";
-        const base = typeof resolved.config["base_url"] === "string" ? String(resolved.config["base_url"]) : (process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1");
+        const base = typeof resolved.config["base_url"] === "string" ? String(resolved.config["base_url"]) : "https://api.openai.com/v1";
         if (!apiKey) throw new Error("Missing api_key");
         const res = await fetch(`${String(base).replace(/\/+$/, "")}/models`, {
           headers: { Authorization: `Bearer ${apiKey}` },
@@ -85,7 +85,7 @@ export class CompanyIntegrationsController {
 
       if (p === "evolution") {
         const apiKey = typeof resolved.secrets["api_key"] === "string" ? (resolved.secrets["api_key"] as string) : "";
-        const apiUrl = typeof resolved.config["api_url"] === "string" ? String(resolved.config["api_url"]) : (process.env.EVOLUTION_API_URL ?? "");
+        const apiUrl = typeof resolved.config["api_url"] === "string" ? String(resolved.config["api_url"]) : "";
         if (!apiKey || !apiUrl) throw new Error("Missing api_url/api_key");
 
         const url = `${apiUrl.replace(/\/+$/, "")}/instance/fetchInstances`;
@@ -104,7 +104,7 @@ export class CompanyIntegrationsController {
         const baseUrl =
           typeof resolved.config["base_url"] === "string" && String(resolved.config["base_url"]).trim()
             ? String(resolved.config["base_url"])
-            : process.env.AUTENTIQUE_BASE_URL ?? "https://api.autentique.com.br";
+            : "https://api.autentique.com.br";
         if (!apiKey) throw new Error("Missing api_key");
 
         const base = baseUrl.replace(/\/+$/, "");

@@ -26,17 +26,8 @@ function createThenableMutation(result: any) {
 describe("DocumentProcessorService", () => {
   const originalFetch = global.fetch;
 
-  beforeEach(() => {
-    process.env.OPENAI_API_KEY = "test-key";
-    process.env.OPENAI_BASE_URL = "http://openai.test/v1";
-    process.env.OPENAI_EMBEDDING_MODEL = "test-model";
-  });
-
   afterEach(() => {
     global.fetch = originalFetch;
-    delete process.env.OPENAI_API_KEY;
-    delete process.env.OPENAI_BASE_URL;
-    delete process.env.OPENAI_EMBEDDING_MODEL;
     delete process.env.KB_CHUNK_WORDS;
     delete process.env.KB_CHUNK_OVERLAP;
   });
@@ -71,7 +62,12 @@ describe("DocumentProcessorService", () => {
     const service = new DocumentProcessorService(
       { getAdminClient: jest.fn(() => admin as any) } as any,
       { get: jest.fn() } as any,
-      { resolve: jest.fn().mockResolvedValue(null) } as any,
+      {
+        resolve: jest.fn().mockResolvedValue({
+          config: { base_url: "http://openai.test/v1", embedding_model: "test-model" },
+          secrets: { api_key: "test-key" },
+        }),
+      } as any,
     );
 
     await service.processDocument(docId);
@@ -123,7 +119,12 @@ describe("DocumentProcessorService", () => {
     const service = new DocumentProcessorService(
       { getAdminClient: jest.fn(() => admin as any) } as any,
       { get: jest.fn() } as any,
-      { resolve: jest.fn().mockResolvedValue(null) } as any,
+      {
+        resolve: jest.fn().mockResolvedValue({
+          config: { base_url: "http://openai.test/v1", embedding_model: "test-model" },
+          secrets: { api_key: "test-key" },
+        }),
+      } as any,
     );
 
     await service.processDocument(docId);
@@ -136,12 +137,11 @@ describe("DocumentProcessorService", () => {
     expect(updateReady.update).toHaveBeenCalledWith(expect.objectContaining({ status: "ready" }));
   });
 
-  it("embedChunks requires OPENAI_API_KEY", async () => {
-    delete process.env.OPENAI_API_KEY;
+  it("embedChunks requires api_key in resolved OpenAI integration", async () => {
     const service = new DocumentProcessorService(
       { getAdminClient: jest.fn() } as any,
       { get: jest.fn() } as any,
-      { resolve: jest.fn().mockResolvedValue(null) } as any,
+      { resolve: jest.fn().mockResolvedValue({ config: {}, secrets: {} }) } as any,
     );
 
     await expect((service as any)._embedChunks("c1", ["a"])).rejects.toBeInstanceOf(ValidationError);

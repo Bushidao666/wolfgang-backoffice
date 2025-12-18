@@ -187,23 +187,25 @@ export class DocumentProcessorService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async _embedChunks(companyId: string, chunks: string[]): Promise<number[][]> {
-    const resolved = await this.integrations.resolve(companyId, "openai").catch(() => null);
+    const resolved = await this.integrations.resolve(companyId, "openai");
+    if (!resolved) {
+      throw new ValidationError("OpenAI integration is disabled for this company");
+    }
 
-    const apiKey =
-      (resolved && typeof resolved.secrets["api_key"] === "string" ? String(resolved.secrets["api_key"]) : "") ||
-      process.env.OPENAI_API_KEY?.trim() ||
-      "";
-    if (!apiKey) throw new ValidationError("OpenAI api_key is required to process Knowledge Base embeddings");
+    const apiKey = typeof resolved.secrets["api_key"] === "string" ? String(resolved.secrets["api_key"]).trim() : "";
+    if (!apiKey) {
+      throw new ValidationError("OpenAI integration is missing api_key (configure it in credential sets / bindings)");
+    }
 
     const base =
-      (resolved && typeof resolved.config["base_url"] === "string" ? String(resolved.config["base_url"]) : "") ||
-      process.env.OPENAI_BASE_URL ||
-      "https://api.openai.com/v1";
+      typeof resolved.config["base_url"] === "string" && String(resolved.config["base_url"]).trim()
+        ? String(resolved.config["base_url"])
+        : "https://api.openai.com/v1";
 
     const model =
-      (resolved && typeof resolved.config["embedding_model"] === "string" ? String(resolved.config["embedding_model"]) : "") ||
-      process.env.OPENAI_EMBEDDING_MODEL ||
-      "text-embedding-3-small";
+      typeof resolved.config["embedding_model"] === "string" && String(resolved.config["embedding_model"]).trim()
+        ? String(resolved.config["embedding_model"])
+        : "text-embedding-3-small";
 
     const results: number[][] = [];
     const batchSize = Number(process.env.KB_EMBED_BATCH ?? 32);

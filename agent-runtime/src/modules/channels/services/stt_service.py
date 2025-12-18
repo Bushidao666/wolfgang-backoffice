@@ -4,7 +4,6 @@ import logging
 
 import httpx
 
-from common.config.settings import get_settings
 from common.infrastructure.database.supabase_client import SupabaseDb
 from common.infrastructure.integrations.openai_resolver import OpenAIResolver
 
@@ -24,12 +23,7 @@ class SpeechToTextService:
             base_url = resolved.base_url
             model = resolved.stt_model
         else:
-            settings = get_settings()
-            if not settings.openai_api_key:
-                raise RuntimeError("OPENAI_API_KEY is required for speech-to-text")
-            api_key = settings.openai_api_key
-            base_url = settings.openai_base_url
-            model = settings.openai_stt_model
+            raise RuntimeError("SupabaseDb is required for speech-to-text (no env fallback)")
 
         async with httpx.AsyncClient(
             base_url=base_url,

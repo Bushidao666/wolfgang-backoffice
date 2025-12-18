@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { GoneException, Injectable } from "@nestjs/common";
 import { createHmac, timingSafeEqual } from "crypto";
 
 import { ValidationError } from "@wolfgang/contracts";
@@ -75,21 +75,9 @@ export class WebhookProcessorService {
     signature?: string | undefined;
     request_id?: string | undefined;
   }) {
-    const secret = (process.env.AUTENTIQUE_WEBHOOK_SECRET ?? "").trim();
-    const apiKey = (process.env.AUTENTIQUE_API_KEY ?? "").trim();
-    const baseUrl = (process.env.AUTENTIQUE_BASE_URL ?? "https://api.autentique.com.br").trim();
-
-    if (!secret) {
-      throw new ValidationError("AUTENTIQUE_WEBHOOK_SECRET is required to verify webhook signatures");
-    }
-    if (!apiKey) {
-      throw new ValidationError("AUTENTIQUE_API_KEY is required to process Autentique webhooks (legacy endpoint)");
-    }
-
-    await this.processAutentiqueWebhookWithCredentials({
-      ...args,
-      autentique: { api_key: apiKey, base_url: baseUrl, webhook_secret: secret },
-    });
+    throw new GoneException(
+      "Legacy Autentique webhook endpoint is disabled. Configure the webhook using /webhooks/autentique/set/:credentialSetId (recommended) or /webhooks/autentique/company/:companyId.",
+    );
   }
 
   private async processAutentiqueWebhookWithCredentials(args: {

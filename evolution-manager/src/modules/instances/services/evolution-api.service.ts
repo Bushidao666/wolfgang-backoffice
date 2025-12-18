@@ -1,9 +1,7 @@
 import { Injectable, ServiceUnavailableException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 
 import { resolveCompanyIntegration } from "@wolfgang/integrations";
 
-import type { EvolutionConfig } from "../../../config/evolution.config";
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
 
 type EvolutionResponse<T> = T & Record<string, unknown>;
@@ -15,38 +13,23 @@ function withTrailingSlash(url: string) {
 @Injectable()
 export class EvolutionApiService {
   constructor(
-    private readonly configService: ConfigService,
     private readonly supabase: SupabaseService,
   ) {}
-
-  private get cfg(): EvolutionConfig {
-    return (this.configService.get<EvolutionConfig>("evolution") ?? {
-      apiUrl: process.env.EVOLUTION_API_URL ?? "",
-      apiKey: process.env.EVOLUTION_API_KEY ?? "",
-      webhookSecret: process.env.WEBHOOK_SECRET ?? "",
-    }) satisfies EvolutionConfig;
-  }
 
   private admin() {
     return this.supabase.getAdminClient();
   }
 
   private async resolveCredentials(companyId: string): Promise<{ apiUrl: string; apiKey: string }> {
-    try {
-      const resolved = await resolveCompanyIntegration({ supabaseAdmin: this.admin(), companyId, provider: "evolution" });
-      if (resolved) {
-        const apiKey = typeof resolved.secrets["api_key"] === "string" ? String(resolved.secrets["api_key"]) : "";
-        const apiUrl = typeof resolved.config["api_url"] === "string" ? String(resolved.config["api_url"]) : "";
-        if (apiKey && apiUrl) return { apiUrl, apiKey };
-      }
-    } catch {
-      // fall back to env
+    const resolved = await resolveCompanyIntegration({ supabaseAdmin: this.admin(), companyId, provider: "evolution" });
+    if (!resolved) {
+      throw new ServiceUnavailableException("Evolution integration is disabled for company");
     }
 
-    const apiUrl = this.cfg.apiUrl?.trim();
-    const apiKey = this.cfg.apiKey?.trim();
-    if (!apiUrl || !apiKey) {
-      throw new ServiceUnavailableException("Evolution API not configured (EVOLUTION_API_URL / EVOLUTION_API_KEY)");
+    const apiKey = typeof resolved.secrets["api_key"] === "string" ? String(resolved.secrets["api_key"]) : "";
+    const apiUrl = typeof resolved.config["api_url"] === "string" ? String(resolved.config["api_url"]) : "";
+    if (!apiKey || !apiUrl) {
+      throw new ServiceUnavailableException("Evolution integration is missing api_url/api_key");
     }
     return { apiUrl, apiKey };
   }

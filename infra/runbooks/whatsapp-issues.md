@@ -25,7 +25,8 @@ Este runbook cobre incidentes do **`evolution-manager`**, responsável por integ
 
 ### 1) Variáveis de ambiente
 
-- `EVOLUTION_API_URL` e `EVOLUTION_API_KEY` configurados
+- ⚠️ Credenciais da Evolution API **não** são lidas de env (vNext).
+  - Elas vêm do banco (`core.integration_credential_sets` + `core.company_integration_bindings`) para a empresa selecionada.
 - `WEBHOOK_SECRET` (quando aplicável) consistente com o produtor/consumer
 - `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` (para persistir estados no CORE)
 - `CORS_ORIGIN` (se houver UI consumindo)

@@ -45,12 +45,16 @@ Se o serviço sobe mas não processa:
 
 ### 3) OpenAI
 
-Sem `OPENAI_API_KEY`:
-- o runtime usa fallbacks determinísticos (não chama LLM), o que reduz qualidade mas mantém sistema funcional.
+⚠️ No vNext, o runtime **não lê OPENAI_API_KEY de env**.
 
-Com `OPENAI_API_KEY`:
-- checar `OPENAI_BASE_URL`, modelos (`OPENAI_CHAT_MODEL`, `OPENAI_EMBEDDING_MODEL`)
-- observar erros de rate limit/timeout
+Se a integração OpenAI estiver **desabilitada** ou **sem `api_key`** para a empresa:
+- STT/vision/embeddings não funcionam (erros do tipo “OpenAI integration not configured …”)
+- algumas rotinas caem em fallback determinístico (ex.: extração de fatos via regex), reduzindo qualidade mas mantendo o fluxo básico
+
+Checklist de diagnóstico:
+- conferir `core.integration_credential_sets` (provider `openai`) e se existe um default
+- conferir `core.company_integration_bindings` para a empresa (modo `global/custom/disabled`)
+- observar erros de rate limit/timeout nos logs do runtime e do provedor
 
 ## Mitigação / Recovery
 

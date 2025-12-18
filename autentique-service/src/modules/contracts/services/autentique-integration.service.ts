@@ -5,6 +5,7 @@ import { resolveCompanyIntegration } from "@wolfgang/integrations";
 import { ValidationError } from "@wolfgang/contracts";
 
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
+import { requireAppEncryptionKey } from "../../../common/utils/require-encryption-key";
 
 export type AutentiqueResolved = {
   api_key: string;
@@ -40,6 +41,7 @@ export class AutentiqueIntegrationService {
   }
 
   async resolveForCompany(companyId: string): Promise<AutentiqueResolved> {
+    requireAppEncryptionKey();
     try {
       const resolved = await resolveCompanyIntegration({ supabaseAdmin: this.admin(), companyId, provider: "autentique" });
       if (!resolved) {
@@ -47,23 +49,13 @@ export class AutentiqueIntegrationService {
       }
       return this.parseResolved(resolved);
     } catch (err) {
-      const apiKey = process.env.AUTENTIQUE_API_KEY?.trim() ?? "";
-      const webhookSecret = process.env.AUTENTIQUE_WEBHOOK_SECRET?.trim() ?? "";
-      const baseUrl = process.env.AUTENTIQUE_BASE_URL?.trim() || "https://api.autentique.com.br";
-
-      if (apiKey) {
-        if (!webhookSecret) {
-          throw new ServiceUnavailableException("AUTENTIQUE_WEBHOOK_SECRET is required to verify webhooks");
-        }
-        return { api_key: apiKey, webhook_secret: webhookSecret, base_url: baseUrl, source: "global" };
-      }
-
       if (err instanceof ValidationError) throw err;
       throw new ServiceUnavailableException("Autentique integration not configured");
     }
   }
 
   async resolveForCredentialSetId(credentialSetId: string): Promise<AutentiqueResolved> {
+    requireAppEncryptionKey();
     const { data, error } = await this.admin()
       .schema("core")
       .from("integration_credential_sets")
@@ -82,7 +74,7 @@ export class AutentiqueIntegrationService {
     const secretsEnc = String((data as any).secrets_enc ?? "");
     const secrets = decryptJson(secretsEnc);
 
-    const base_url = readString(config, "base_url") ?? process.env.AUTENTIQUE_BASE_URL?.trim() ?? "https://api.autentique.com.br";
+    const base_url = readString(config, "base_url") ?? "https://api.autentique.com.br";
     const api_key = readString(secrets, "api_key") ?? "";
     const webhook_secret = readString(secrets, "webhook_secret") ?? "";
     if (!api_key) throw new ServiceUnavailableException("Autentique credential set is missing api_key");
@@ -109,10 +101,7 @@ export class AutentiqueIntegrationService {
     const config = resolved.config ?? {};
     const secrets = resolved.secrets ?? {};
 
-    const base_url =
-      readString(config, "base_url") ??
-      process.env.AUTENTIQUE_BASE_URL?.trim() ??
-      "https://api.autentique.com.br";
+    const base_url = readString(config, "base_url") ?? "https://api.autentique.com.br";
     const api_key = readString(secrets, "api_key") ?? "";
     const webhook_secret = readString(secrets, "webhook_secret") ?? "";
 
@@ -130,4 +119,3 @@ export class AutentiqueIntegrationService {
     };
   }
 }
-

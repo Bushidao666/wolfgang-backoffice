@@ -158,14 +158,21 @@ G. **Observabilidade e operação**
 ### Problema 1: “Invalid schema” (schemas de tenant não expostos)
 
 **SOLUÇÃO TÉCNICA**  
-Automatizar a exposição do schema no PostgREST ao provisionar um tenant, garantindo que `pgrst.db_schemas` inclua o schema recém-criado e forçando reload do PostgREST.
+Automatizar a exposição do schema no PostgREST ao provisionar um tenant, garantindo que `pgrst.db_schemas` inclua o schema recém-criado e forçando reload do PostgREST (via `NOTIFY pgrst`).
+
+No Supabase Cloud, **não é confiável** tentar alterar `pgrst.db_schemas` via PostgREST/supabase-js durante a criação da empresa, pois isso pode falhar com `42501 permission denied to set parameter "pgrst.db_schemas"`. A abordagem vNext separa:
+- **provisionamento do schema** (DB)
+- **exposição no PostgREST** (job/serviço com conexão Postgres direta)
 
 **IMPLEMENTAÇÃO (estado atual no repo)**  
-Já existe uma migração que resolve isso e ainda garante o trigger de `deals_index`:
-- `supabase/migrations/00072_auto_expose_tenant_schemas.sql`
-  - `core.fn_postgrest_expose_schema(p_schema text)` (dedupe + append + `NOTIFY pgrst`)
-  - `core.fn_provision_company_schema(p_slug text)` chama `core.fn_postgrest_expose_schema(schema_name)`
-  - Backfill: aplica trigger `trg_deals_index_sync` e expõe schemas já existentes
+Implementação atual usa uma **fila de exposição** + um serviço no backend:
+- `supabase/migrations/00078_defer_postgrest_exposure_and_fix_tenant_grants.sql`
+  - `core.postgrest_schema_exposure_queue` + `core.fn_enqueue_postgrest_schema_exposure(schema_name)`
+  - `core.fn_provision_company_schema(p_slug)` enfileira o schema (não tenta alterar `pgrst.db_schemas` diretamente)
+  - backfill aplica `GRANT/DEFAULT PRIVILEGES` em schemas existentes e também enfileira para exposição
+- `backoffice-api/src/modules/companies/services/postgrest-exposure.service.ts`
+  - usa `SUPABASE_DB_URL` (conexão Postgres direta) para executar `core.fn_postgrest_expose_schema(schema)`
+  - drena a fila no startup (best-effort) e após criar empresa (idempotente)
 
 **INTEGRAÇÃO**
 - Backoffice API chama `rpc('fn_provision_company_schema')` na criação de empresa: `backoffice-api/src/modules/companies/services/schema-provisioner.service.ts`.
@@ -174,7 +181,7 @@ Já existe uma migração que resolve isso e ainda garante o trigger de `deals_i
 **TRADEOFFS**
 - ✅ Resolve raiz do problema no DB (não em “if/else” no backend).
 - ✅ Suporta concorrência (advisory lock).
-- ⚠️ Depende de permissão para `ALTER ROLE authenticator SET ...` (ok em Supabase via migrations).
+- ⚠️ Depende de permissão para `ALTER ROLE authenticator SET ...` (executado via conexão Postgres direta `SUPABASE_DB_URL`, não via PostgREST).
 
 **TESTES**
 - Criar empresa e garantir:
@@ -565,7 +572,7 @@ Adicionar `favicon.ico` no `backoffice-web/public` e/ou atualizar config do Next
 
 **Quando “Invalid schema” reaparecer**
 1) Verificar `pgrst.db_schemas` no role `authenticator`  
-2) Executar `select core.fn_postgrest_expose_schema('<schema>');` via service_role  
+2) Executar `select core.fn_postgrest_expose_schema('<schema>');` via conexão Postgres direta (admin / `SUPABASE_DB_URL`)  
 3) Checar `NOTIFY pgrst` e logs do PostgREST
 
 **Quando integração falhar para uma empresa**

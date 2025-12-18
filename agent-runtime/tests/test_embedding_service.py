@@ -21,12 +21,14 @@ class _FakeRedis:
 
 @pytest.mark.asyncio
 async def test_embedding_service_uses_cache_and_calls_openai_for_missing(monkeypatch):
-    settings = types.SimpleNamespace(
-        openai_api_key="k",
-        openai_base_url="https://example.test",
-        openai_embedding_model="emb",
-    )
-    monkeypatch.setattr("modules.memory.services.embedding_service.get_settings", lambda: settings)
+    class _FakeOpenAIResolver:
+        def __init__(self, *args, **kwargs):  # noqa: ARG002
+            pass
+
+        async def resolve_optional(self, *, company_id: str):  # noqa: ARG002
+            return types.SimpleNamespace(api_key="k", base_url="https://example.test", embedding_model="emb")
+
+    monkeypatch.setattr("modules.memory.services.embedding_service.OpenAIResolver", _FakeOpenAIResolver)
 
     class _EmbItem:
         def __init__(self, embedding):
@@ -47,7 +49,7 @@ async def test_embedding_service_uses_cache_and_calls_openai_for_missing(monkeyp
     monkeypatch.setattr("modules.memory.services.embedding_service.AsyncOpenAI", _FakeOpenAI)
 
     redis = _FakeRedis()
-    svc = EmbeddingService(redis=redis)  # type: ignore[arg-type]
+    svc = EmbeddingService(db=object(), redis=redis)  # type: ignore[arg-type]
 
     hello_key = svc._cache_key(company_id="c1", model="emb", text="hello")  # noqa: SLF001
     redis.kv[hello_key] = json.dumps([0.1, 0.2])

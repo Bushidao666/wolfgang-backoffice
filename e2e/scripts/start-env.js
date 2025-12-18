@@ -5,6 +5,7 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const { Client } = require("pg");
+const { encryptJson } = require("@wolfgang/crypto");
 
 function loadDotEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return;
@@ -423,6 +424,65 @@ async function resetDatabase(dbUrl) {
   }
 }
 
+async function seedDefaultIntegrationCredentialSets(dbUrl) {
+  const client = new Client({ connectionString: dbUrl });
+  await client.connect();
+
+  const openaiApiKey = String(process.env.OPENAI_API_KEY || "e2e-openai-key");
+  const openaiBaseUrl = String(process.env.OPENAI_BASE_URL || "http://127.0.0.1:4900/openai/v1");
+
+  const evolutionApiKey = String(process.env.EVOLUTION_API_KEY || "e2e-evolution-key");
+  const evolutionApiUrl = String(process.env.EVOLUTION_API_URL || "http://127.0.0.1:4900/evolution");
+
+  const autentiqueApiKey = String(process.env.AUTENTIQUE_API_KEY || "e2e-autentique-key");
+  const autentiqueBaseUrl = String(process.env.AUTENTIQUE_BASE_URL || "http://127.0.0.1:4900/autentique/v2");
+  const autentiqueWebhookSecret = String(process.env.AUTENTIQUE_WEBHOOK_SECRET || "e2e-autentique-webhook-secret");
+
+  try {
+    await client.query("begin");
+
+    await client.query(
+      `insert into core.integration_credential_sets (provider, name, is_default, config, secrets_enc)
+       values ($1, $2, true, $3::jsonb, $4)`,
+      [
+        "openai",
+        "E2E Default",
+        JSON.stringify({ base_url: openaiBaseUrl, embedding_model: "text-embedding-3-small", chat_model: "gpt-4o-mini", vision_model: "gpt-4o-mini", stt_model: "whisper-1" }),
+        encryptJson({ api_key: openaiApiKey }),
+      ],
+    );
+
+    await client.query(
+      `insert into core.integration_credential_sets (provider, name, is_default, config, secrets_enc)
+       values ($1, $2, true, $3::jsonb, $4)`,
+      [
+        "evolution",
+        "E2E Default",
+        JSON.stringify({ api_url: evolutionApiUrl }),
+        encryptJson({ api_key: evolutionApiKey }),
+      ],
+    );
+
+    await client.query(
+      `insert into core.integration_credential_sets (provider, name, is_default, config, secrets_enc)
+       values ($1, $2, true, $3::jsonb, $4)`,
+      [
+        "autentique",
+        "E2E Default",
+        JSON.stringify({ base_url: autentiqueBaseUrl }),
+        encryptJson({ api_key: autentiqueApiKey, webhook_secret: autentiqueWebhookSecret }),
+      ],
+    );
+
+    await client.query("commit");
+  } catch (err) {
+    await client.query("rollback").catch(() => undefined);
+    throw err;
+  } finally {
+    await client.end().catch(() => undefined);
+  }
+}
+
 async function main() {
   const repoRoot = path.resolve(__dirname, "../..");
   const webPort = Number(process.env.E2E_WEB_PORT || 3100);
@@ -449,7 +509,7 @@ async function main() {
   process.env.PROMETHEUS_ENABLED = "false";
   process.env.OTEL_TRACING_ENABLED = "false";
   process.env.DISABLE_WORKERS = "false";
-  process.env.APP_ENCRYPTION_KEY = process.env.APP_ENCRYPTION_KEY || "e2e-encryption-key";
+  process.env.APP_ENCRYPTION_KEY_CURRENT = process.env.APP_ENCRYPTION_KEY_CURRENT || process.env.APP_ENCRYPTION_KEY || "e2e-encryption-key";
   process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || "e2e-openai-key";
 
   const corsOrigins = new Set(
@@ -473,6 +533,7 @@ async function main() {
   process.env.WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "e2e-webhook-secret";
   process.env.AUTENTIQUE_BASE_URL = process.env.AUTENTIQUE_BASE_URL || `${mockBaseUrl}/autentique/v2`;
   process.env.AUTENTIQUE_API_KEY = process.env.AUTENTIQUE_API_KEY || "e2e-autentique-key";
+  process.env.AUTENTIQUE_WEBHOOK_SECRET = process.env.AUTENTIQUE_WEBHOOK_SECRET || "e2e-autentique-webhook-secret";
 
   try {
     try {
@@ -483,6 +544,7 @@ async function main() {
     execSync("npx supabase start --workdir . --exclude studio --yes", { cwd: repoRoot, stdio: "inherit" });
     execSync("npx supabase db reset --workdir . --local --no-seed --yes", { cwd: repoRoot, stdio: "inherit" });
     await resetDatabase(process.env.SUPABASE_DB_URL);
+    await seedDefaultIntegrationCredentialSets(process.env.SUPABASE_DB_URL);
     execSync("docker compose -f infra/compose/docker-compose.yml up -d redis", { cwd: repoRoot, stdio: "inherit" });
   } catch (err) {
     console.error("Failed to prepare e2e environment:", err instanceof Error ? err.message : String(err));

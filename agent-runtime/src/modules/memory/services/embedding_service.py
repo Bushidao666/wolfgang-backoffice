@@ -7,7 +7,6 @@ from typing import Any
 
 from openai import AsyncOpenAI
 
-from common.config.settings import get_settings
 from common.infrastructure.cache.redis_client import RedisClient
 from common.infrastructure.database.supabase_client import SupabaseDb
 from common.infrastructure.integrations.openai_resolver import OpenAIResolver
@@ -29,12 +28,7 @@ class EmbeddingService:
             base_url = resolved.base_url
             model = resolved.embedding_model
         else:
-            settings = get_settings()
-            if not settings.openai_api_key:
-                raise RuntimeError("OPENAI_API_KEY is required for embeddings")
-            api_key = settings.openai_api_key
-            base_url = settings.openai_base_url
-            model = settings.openai_embedding_model
+            raise RuntimeError("SupabaseDb is required for embeddings (no env fallback)")
 
         cached: dict[int, list[float]] = {}
         missing: list[tuple[int, str]] = []
