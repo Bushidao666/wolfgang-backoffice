@@ -7,4 +7,4 @@ COPY agent-runtime/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY agent-runtime/src ./src
 ENV PYTHONPATH=/app/src
-CMD ["python", "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["sh", "-c", "python -m uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-5000}"]

@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     openai_embedding_model: str = Field(default="text-embedding-3-small", alias="OPENAI_EMBEDDING_MODEL")
 
     media_download_timeout_s: float = Field(default=20.0, alias="MEDIA_DOWNLOAD_TIMEOUT_S")
+    connection_timeout_s: float = Field(default=10.0, alias="CONNECTION_TIMEOUT_S")
 
     debounce_poll_interval_s: float = Field(default=0.5, alias="DEBOUNCE_POLL_INTERVAL_S")
     followup_poll_interval_s: float = Field(default=30.0, alias="FOLLOWUP_POLL_INTERVAL_S")

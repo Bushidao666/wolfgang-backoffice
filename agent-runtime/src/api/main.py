@@ -32,38 +32,47 @@ async def lifespan(app: FastAPI):
     logger.info("startup", extra={"extra": {"env": settings.environment}})
 
     app.state.settings = settings
+    app.state.disable_connections = settings.disable_connections
+    app.state.disable_workers = settings.disable_workers
+    app.state.connection_mode = "disabled" if settings.disable_connections else "connecting"
 
-    if settings.disable_connections:
-        app.state.disable_connections = True
-        yield
-        return
-
-    pool = ConnectionPool(settings.supabase_db_url, min_size=settings.db_pool_min, max_size=settings.db_pool_max)
-    await pool.start()
-    db = SupabaseDb(pool)
-
-    redis = RedisClient(settings.redis_url)
-    await redis.connect()
-
-    app.state.disable_connections = False
-    app.state.pool = pool
-    app.state.db = db
-    app.state.redis = redis
-
-    pubsub = RedisPubSubSubscriber(redis)
-    message_handler = MessageHandler(db=db, redis=redis)
-    pubsub.register("message.received", message_handler.handle_message_received)
-
-    debounce_worker = DebounceWorker(db=db, redis=redis)
-    proactive_handler = ProactiveHandler(db=db, redis=redis)
-    memory_cleanup = MemoryCleanupWorker(db=db, redis=redis)
-
+    pool = None
+    db = None
+    redis = None
+    pubsub = None
     subscriber_task = debounce_task = proactive_task = cleanup_task = None
-    if not settings.disable_workers:
-        subscriber_task = asyncio.create_task(pubsub.run_forever())
-        debounce_task = asyncio.create_task(debounce_worker.run_forever())
-        proactive_task = asyncio.create_task(proactive_handler.run_forever())
-        cleanup_task = asyncio.create_task(memory_cleanup.run_forever())
+
+    if not settings.disable_connections:
+        try:
+            pool = ConnectionPool(settings.supabase_db_url, min_size=settings.db_pool_min, max_size=settings.db_pool_max)
+            await asyncio.wait_for(pool.start(), timeout=settings.connection_timeout_s)
+            db = SupabaseDb(pool)
+
+            redis = RedisClient(settings.redis_url)
+            await asyncio.wait_for(redis.connect(), timeout=settings.connection_timeout_s)
+
+            app.state.pool = pool
+            app.state.db = db
+            app.state.redis = redis
+            app.state.connection_mode = "connected"
+
+            pubsub = RedisPubSubSubscriber(redis)
+            message_handler = MessageHandler(db=db, redis=redis)
+            pubsub.register("message.received", message_handler.handle_message_received)
+
+            debounce_worker = DebounceWorker(db=db, redis=redis)
+            proactive_handler = ProactiveHandler(db=db, redis=redis)
+            memory_cleanup = MemoryCleanupWorker(db=db, redis=redis)
+
+            if not settings.disable_workers:
+                subscriber_task = asyncio.create_task(pubsub.run_forever())
+                debounce_task = asyncio.create_task(debounce_worker.run_forever())
+                proactive_task = asyncio.create_task(proactive_handler.run_forever())
+                cleanup_task = asyncio.create_task(memory_cleanup.run_forever())
+        except Exception as e:
+            app.state.connection_mode = "failed"
+            app.state.connection_error_type = type(e).__name__
+            logger.exception("startup_connections_failed")
 
     try:
         yield
@@ -71,9 +80,12 @@ async def lifespan(app: FastAPI):
         for task in (subscriber_task, debounce_task, proactive_task, cleanup_task):
             if task:
                 task.cancel()
-        await pubsub.close()
-        await redis.close()
-        await pool.close()
+        if pubsub:
+            await pubsub.close()
+        if redis:
+            await redis.close()
+        if pool:
+            await pool.close()
 
 
 app = FastAPI(title="Wolfgang Agent Runtime", version="0.1.0", lifespan=lifespan)

@@ -13,9 +13,11 @@ def health():
 
 @router.get("/ready")
 async def ready(request: Request):
-    disable_connections = bool(getattr(request.app.state, "disable_connections", False))
-    if disable_connections:
+    connection_mode = getattr(request.app.state, "connection_mode", None)
+    if connection_mode == "disabled":
         return {"status": "ok", "service": "agent-runtime", "ready": True, "checks": {"connections": "disabled"}}
+
+    connection_error_type = getattr(request.app.state, "connection_error_type", None)
 
     db = getattr(request.app.state, "db", None)
     redis = getattr(request.app.state, "redis", None)
@@ -43,9 +45,13 @@ async def ready(request: Request):
         checks["redis"] = "failed"
         ok = False
 
-    return {
+    payload = {
         "status": "ok" if ok else "degraded",
         "service": "agent-runtime",
         "ready": ok,
+        "connection_mode": connection_mode,
         "checks": checks,
     }
+    if connection_error_type:
+        payload["connection_error_type"] = str(connection_error_type)
+    return payload
