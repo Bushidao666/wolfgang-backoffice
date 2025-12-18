@@ -7,6 +7,8 @@ COPY autentique-service/ ./autentique-service/
 RUN npm ci --workspaces --include-workspace-root
 RUN npm -w @wolfgang/contracts run build
 RUN npm -w @wolfgang/logger run build
+RUN npm -w @wolfgang/crypto run build
+RUN npm -w @wolfgang/integrations run build
 RUN npm -w @wolfgang/autentique-service run build
 
 FROM node:20-alpine

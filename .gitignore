@@ -14,6 +14,8 @@ coverage
 **/.coverage
 test-results
 playwright-report
+Relatórios/
+Relatorios/
 
 # Env
 .env
