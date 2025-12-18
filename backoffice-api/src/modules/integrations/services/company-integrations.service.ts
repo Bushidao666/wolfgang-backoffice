@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { ValidationError } from "@wolfgang/contracts";
 import { encryptJson } from "@wolfgang/crypto";
 
+import { requireAppEncryptionKey } from "../../../common/utils/require-encryption-key";
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
 import type { IntegrationProvider } from "../dto/create-credential-set.dto";
 import type { UpsertCompanyIntegrationDto } from "../dto/upsert-company-integration.dto";
@@ -63,7 +64,7 @@ export class CompanyIntegrationsService {
       mode,
       credential_set_id: mode === "global" ? dto.credential_set_id ?? null : null,
       config_override: dto.config_override ?? {},
-      secrets_override_enc: mode === "custom" ? encryptJson(dto.secrets_override ?? {}) : "",
+      secrets_override_enc: mode === "custom" ? (requireAppEncryptionKey(), encryptJson(dto.secrets_override ?? {})) : "",
       status: "active",
       last_error: null,
     };
@@ -113,4 +114,3 @@ export class CompanyIntegrationsService {
     if (error) throw new ValidationError("Failed to update integration status", { error });
   }
 }
-

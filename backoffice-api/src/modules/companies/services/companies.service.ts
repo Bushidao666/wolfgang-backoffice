@@ -1,13 +1,15 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, ServiceUnavailableException } from "@nestjs/common";
 
 import { NotFoundError, ValidationError } from "@wolfgang/contracts";
 import { encryptJson } from "@wolfgang/crypto";
 
+import { requireAppEncryptionKey } from "../../../common/utils/require-encryption-key";
 import type { CompanyResponseDto } from "../dto/company-response.dto";
 import type { CreateCompanyDto } from "../dto/create-company.dto";
 import type { ListCompaniesDto } from "../dto/list-companies.dto";
 import type { UpdateCompanyDto } from "../dto/update-company.dto";
 import { CompaniesRepository } from "../repository/companies.repository";
+import { PostgrestExposureService } from "./postgrest-exposure.service";
 
 function slugify(input: string): string {
   const normalized = input
@@ -30,6 +32,7 @@ function slugify(input: string): string {
 export class CompaniesService {
   constructor(
     private readonly repo: CompaniesRepository,
+    private readonly postgrestExposure: PostgrestExposureService,
   ) {}
 
   async list(query: ListCompaniesDto) {
@@ -82,9 +85,20 @@ export class CompaniesService {
           mode: i.mode,
           credential_set_id: i.credential_set_id,
           config_override: i.config_override ?? {},
-          secrets_override_enc: i.mode === "custom" ? encryptJson(i.secrets_override ?? {}) : "",
+          secrets_override_enc: i.mode === "custom" ? (requireAppEncryptionKey(), encryptJson(i.secrets_override ?? {})) : "",
         };
       }) ?? undefined;
+
+    // Avoid creating partial companies if we can't later expose the schema in PostgREST.
+    // This requires a direct Postgres connection (SUPABASE_DB_URL / DATABASE_URL) on the API.
+    try {
+      await this.postgrestExposure.ensureOperational();
+    } catch (err) {
+      if (err instanceof ServiceUnavailableException) throw err;
+      throw new ServiceUnavailableException("Falha ao validar acesso ao Postgres para expor schemas no PostgREST", {
+        error: err instanceof Error ? err.message : String(err),
+      } as any);
+    }
 
     const suffix = Date.now().toString(36);
     const maxBase = Math.max(1, 48 - (suffix.length + 1));
@@ -101,6 +115,7 @@ export class CompaniesService {
           owner_user_id: ownerUserId,
           integrations,
         });
+        await this.postgrestExposure.exposeSchema(schema_name);
         return this.toResponse(company, schema_name);
       } catch (err) {
         lastError = err;

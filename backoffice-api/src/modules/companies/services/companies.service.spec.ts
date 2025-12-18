@@ -15,6 +15,14 @@ function createRepoMock(overrides: Partial<any> = {}) {
   };
 }
 
+function createPostgrestExposureMock(overrides: Partial<any> = {}) {
+  return {
+    ensureOperational: jest.fn().mockResolvedValue(undefined),
+    exposeSchema: jest.fn().mockResolvedValue(undefined),
+    ...overrides,
+  };
+}
+
 describe("CompaniesService", () => {
   beforeEach(() => {
     jest.restoreAllMocks();
@@ -30,7 +38,8 @@ describe("CompaniesService", () => {
       }),
       getPrimarySchemaName: jest.fn().mockResolvedValue("tenant_a"),
     });
-    const service = new CompaniesService(repo as any);
+    const exposure = createPostgrestExposureMock();
+    const service = new CompaniesService(repo as any, exposure as any);
     const res = await service.list({ page: 2, per_page: 10 });
 
     expect(res.page).toBe(2);
@@ -56,11 +65,14 @@ describe("CompaniesService", () => {
         schema_name: "tenant_empresa_x",
       }),
     });
-    const service = new CompaniesService(repo as any);
+    const exposure = createPostgrestExposureMock();
+    const service = new CompaniesService(repo as any, exposure as any);
     const res = await service.create({ name: "Empresa X" }, "owner");
 
     expect(res.slug).toBe("empresa_x");
     expect(res.schema_name).toBe("tenant_empresa_x");
+    expect(exposure.ensureOperational).toHaveBeenCalled();
+    expect(exposure.exposeSchema).toHaveBeenCalledWith("tenant_empresa_x");
     expect(repo.createCompanyFull).toHaveBeenCalledWith(
       expect.objectContaining({ name: "Empresa X", slug: "empresa_x", owner_user_id: "owner" }),
     );
@@ -86,7 +98,8 @@ describe("CompaniesService", () => {
           schema_name: "tenant_empresa_x_krd8m0",
         }),
     });
-    const service = new CompaniesService(repo as any);
+    const exposure = createPostgrestExposureMock();
+    const service = new CompaniesService(repo as any, exposure as any);
     const res = await service.create({ name: "Empresa X" }, "owner");
 
     expect(res.slug).toMatch(/^empresa_x_/);
@@ -98,19 +111,22 @@ describe("CompaniesService", () => {
       existsBySlug: jest.fn().mockResolvedValue(false),
       createCompanyFull: jest.fn().mockRejectedValue(new ValidationError("fail")),
     });
-    const service = new CompaniesService(repo as any);
+    const exposure = createPostgrestExposureMock();
+    const service = new CompaniesService(repo as any, exposure as any);
     await expect(service.create({ name: "Empresa X" }, "owner")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("getById throws NotFoundError when missing", async () => {
     const repo = createRepoMock({ getCompanyById: jest.fn().mockResolvedValue(null) });
-    const service = new CompaniesService(repo as any);
+    const exposure = createPostgrestExposureMock();
+    const service = new CompaniesService(repo as any, exposure as any);
     await expect(service.getById("c1")).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it("update throws NotFoundError when missing", async () => {
     const repo = createRepoMock({ getCompanyById: jest.fn().mockResolvedValue(null) });
-    const service = new CompaniesService(repo as any);
+    const exposure = createPostgrestExposureMock();
+    const service = new CompaniesService(repo as any, exposure as any);
     await expect(service.update("c1", { name: "X" })).rejects.toBeInstanceOf(NotFoundError);
   });
 });

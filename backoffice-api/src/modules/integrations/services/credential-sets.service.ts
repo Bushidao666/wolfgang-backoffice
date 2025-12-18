@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { ValidationError } from "@wolfgang/contracts";
 import { encryptJson } from "@wolfgang/crypto";
 
+import { requireAppEncryptionKey } from "../../../common/utils/require-encryption-key";
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
 import type { CreateCredentialSetDto, IntegrationProvider } from "../dto/create-credential-set.dto";
 import type { UpdateCredentialSetDto } from "../dto/update-credential-set.dto";
@@ -52,7 +53,7 @@ export class CredentialSetsService {
   }
 
   async create(dto: CreateCredentialSetDto, meta: { user_id?: string }) {
-    const secretsEnc = dto.secrets ? encryptJson(dto.secrets) : "";
+    const secretsEnc = dto.secrets ? (requireAppEncryptionKey(), encryptJson(dto.secrets)) : "";
 
     // Insert with is_default=false, then promote via RPC to avoid unique conflicts.
     const { data, error } = await this.admin()
@@ -94,7 +95,7 @@ export class CredentialSetsService {
     const patch: Record<string, unknown> = {};
     if (dto.name !== undefined) patch.name = dto.name.trim();
     if (dto.config !== undefined) patch.config = dto.config ?? {};
-    if (dto.secrets !== undefined) patch.secrets_enc = dto.secrets ? encryptJson(dto.secrets) : "";
+    if (dto.secrets !== undefined) patch.secrets_enc = dto.secrets ? (requireAppEncryptionKey(), encryptJson(dto.secrets)) : "";
     if (dto.is_default !== undefined) patch.is_default = !!dto.is_default;
 
     const { data, error } = await this.admin()
@@ -137,4 +138,3 @@ export class CredentialSetsService {
     if (error) throw new ValidationError("Failed to set default credential set", { error });
   }
 }
-

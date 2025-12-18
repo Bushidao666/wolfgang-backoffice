@@ -4,6 +4,7 @@ import Ajv from "ajv";
 import { ValidationError } from "@wolfgang/contracts";
 import { encryptJson } from "@wolfgang/crypto";
 
+import { requireAppEncryptionKey } from "../../../common/utils/require-encryption-key";
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
 import type { CreateToolDto } from "../dto/create-tool.dto";
 
@@ -19,7 +20,7 @@ function assertValidSchema(schema: Record<string, unknown>, label: string) {
 
 function encryptJsonOrEmpty(value: Record<string, unknown> | undefined): string {
   const payload = value ?? {};
-  return Object.keys(payload).length ? encryptJson(payload) : "";
+  return Object.keys(payload).length ? (requireAppEncryptionKey(), encryptJson(payload)) : "";
 }
 
 type ToolRow = {
