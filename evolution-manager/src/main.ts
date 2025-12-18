@@ -10,7 +10,7 @@ async function bootstrap() {
   app.useLogger(app.get(LoggerService));
 
   app.enableCors({
-    origin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
+    origin: true,
     credentials: true,
     allowedHeaders: ["Authorization", "Content-Type", "X-Company-Id", "X-Request-Id", "X-Correlation-Id"],
   });
