@@ -17,10 +17,18 @@ export class RedisService implements OnModuleDestroy {
       url: process.env.REDIS_URL ?? "redis://localhost:6379",
     };
 
-    const options = { lazyConnect: true } as const;
+    const options = {
+      lazyConnect: true,
+      maxRetriesPerRequest: null,
+    } as const;
     this.client = new Redis(config.url, options);
     this.publisher = new Redis(config.url, options);
     this.subscriber = new Redis(config.url, options);
+
+    const swallow = () => undefined;
+    this.client.on("error", swallow);
+    this.publisher.on("error", swallow);
+    this.subscriber.on("error", swallow);
   }
 
   async onModuleDestroy() {
