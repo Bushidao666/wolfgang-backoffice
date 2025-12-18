@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 
 import { ValidationError } from "@wolfgang/contracts";
 
+import { normalizeHttpUrl } from "../../common/utils/url";
 import type { ServicesConfig } from "../../config/services.config";
 
 type CreateAutentiqueContractRequest = {
@@ -25,7 +26,9 @@ export class AutentiqueServiceClient {
 
   constructor(private readonly configService: ConfigService) {
     const cfg = this.configService.get<ServicesConfig>("services");
-    this.baseUrl = cfg?.autentiqueServiceUrl ?? process.env.AUTENTIQUE_SERVICE_URL ?? "http://127.0.0.1:4002";
+    this.baseUrl = normalizeHttpUrl(
+      cfg?.autentiqueServiceUrl ?? process.env.AUTENTIQUE_SERVICE_URL ?? "http://127.0.0.1:4002",
+    );
   }
 
   async createContract(payload: CreateAutentiqueContractRequest, opts?: { requestId?: string; correlationId?: string }) {

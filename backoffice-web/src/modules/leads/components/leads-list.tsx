@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getSessionTokens } from "@/lib/auth/session";
+import { resolveApiUrl } from "@/lib/runtime-config";
 import { LeadsFilters, type LeadFilters } from "@/modules/leads/components/leads-filters";
 import { useLeads } from "@/modules/leads/hooks/use-leads";
 
@@ -16,13 +17,6 @@ function inferChannel(phone: string) {
   if (phone.startsWith("telegram:")) return "telegram";
   if (phone.startsWith("instagram:")) return "instagram";
   return "whatsapp";
-}
-
-function getWsUrl() {
-  const url = process.env.NEXT_PUBLIC_API_URL;
-  if (url) return url;
-  if (process.env.NODE_ENV === "production") return null;
-  return "http://localhost:4000";
 }
 
 export function LeadsList({ companyId }: { companyId: string }) {
@@ -54,23 +48,32 @@ export function LeadsList({ companyId }: { companyId: string }) {
     const session = getSessionTokens();
     if (!session?.accessToken) return;
 
-    const wsUrl = getWsUrl();
-    if (!wsUrl) return;
-
-    const socket: Socket = io(wsUrl, {
-      path: "/ws",
-      transports: ["websocket"],
-      auth: { token: session.accessToken, company_id: companyId },
-    });
+    let socket: Socket | null = null;
+    let cancelled = false;
 
     const onLeadChanged = () => {
       void leadsQuery.refetch();
     };
 
-    socket.on("lead.created", onLeadChanged);
-    socket.on("lead.qualified", onLeadChanged);
+    void (async () => {
+      try {
+        const wsUrl = await resolveApiUrl();
+        if (cancelled) return;
+        socket = io(wsUrl, {
+          path: "/ws",
+          transports: ["websocket"],
+          auth: { token: session.accessToken, company_id: companyId },
+        });
+        socket.on("lead.created", onLeadChanged);
+        socket.on("lead.qualified", onLeadChanged);
+      } catch {
+        // ignore ws failures (leads list still works via polling/refetch)
+      }
+    })();
 
     return () => {
+      cancelled = true;
+      if (!socket) return;
       socket.off("lead.created", onLeadChanged);
       socket.off("lead.qualified", onLeadChanged);
       socket.disconnect();

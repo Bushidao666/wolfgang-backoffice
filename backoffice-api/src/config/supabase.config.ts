@@ -1,8 +1,10 @@
 import { registerAs } from "@nestjs/config";
 import { z } from "zod";
 
+import { normalizeHttpUrl } from "../common/utils/url";
+
 const SupabaseEnvSchema = z.object({
-  SUPABASE_URL: z.string().url().default("http://127.0.0.1:54321"),
+  SUPABASE_URL: z.string().default("http://127.0.0.1:54321"),
   SUPABASE_ANON_KEY: z.string().optional().default(""),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional().default(""),
 });
@@ -13,12 +15,21 @@ export type SupabaseConfig = {
   serviceRoleKey: string;
 };
 
-export const supabaseConfig = registerAs("supabase", (): SupabaseConfig => {
-  const env = SupabaseEnvSchema.parse(process.env);
-  return {
-    url: env.SUPABASE_URL,
-    anonKey: env.SUPABASE_ANON_KEY,
-    serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
-  };
+const SupabaseNormalizedSchema = z.object({
+  SUPABASE_URL: z.string().url(),
+  SUPABASE_ANON_KEY: z.string().optional().default(""),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional().default(""),
 });
 
+export const supabaseConfig = registerAs("supabase", (): SupabaseConfig => {
+  const env = SupabaseEnvSchema.parse(process.env);
+  const normalized = SupabaseNormalizedSchema.parse({
+    ...env,
+    SUPABASE_URL: normalizeHttpUrl(env.SUPABASE_URL),
+  });
+  return {
+    url: normalized.SUPABASE_URL,
+    anonKey: normalized.SUPABASE_ANON_KEY,
+    serviceRoleKey: normalized.SUPABASE_SERVICE_ROLE_KEY,
+  };
+});

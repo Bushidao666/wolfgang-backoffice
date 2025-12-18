@@ -1,4 +1,6 @@
 import { getSessionTokens, isJwtExpired, setSessionTokens } from "@/lib/auth/session";
+import { resolveApiUrl } from "@/lib/runtime-config";
+import { normalizeBaseUrl } from "@/lib/url";
 
 export class ApiError extends Error {
   status: number;
@@ -10,15 +12,6 @@ export class ApiError extends Error {
     this.status = status;
     this.details = details;
   }
-}
-
-function getApiBaseUrl() {
-  const url = process.env.NEXT_PUBLIC_API_URL;
-  if (url) return url;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("NEXT_PUBLIC_API_URL is required in production (set it in your deployment env).");
-  }
-  return "http://localhost:4000";
 }
 
 async function parseJsonSafe(res: Response) {
@@ -35,7 +28,8 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit & { skipAuth?: boolean; retry?: boolean; baseUrl?: string } = {},
 ): Promise<T> {
-  const baseUrl = options.baseUrl ?? getApiBaseUrl();
+  const rawBaseUrl = options.baseUrl ?? (await resolveApiUrl());
+  const baseUrl = normalizeBaseUrl(rawBaseUrl);
   const url = path.startsWith("http") ? path : `${baseUrl}${path.startsWith("/") ? "" : "/"}${path}`;
 
   const headers = new Headers(options.headers ?? {});

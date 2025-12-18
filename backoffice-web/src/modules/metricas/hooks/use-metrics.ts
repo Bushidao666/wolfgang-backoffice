@@ -5,19 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { io, type Socket } from "socket.io-client";
 
 import { getSessionTokens } from "@/lib/auth/session";
+import { resolveApiUrl } from "@/lib/runtime-config";
 import {
   getMetricsByCenturion,
   getMetricsConversion,
   getMetricsSummary,
   getMetricsTimeline,
 } from "@/modules/metricas/services/metrics.service";
-
-function getWsUrl() {
-  const url = process.env.NEXT_PUBLIC_API_URL;
-  if (url) return url;
-  if (process.env.NODE_ENV === "production") return null;
-  return "http://localhost:4000";
-}
 
 export function useMetrics(companyId?: string, range: { from?: string; to?: string } = {}) {
   const summary = useQuery({
@@ -49,14 +43,8 @@ export function useMetrics(companyId?: string, range: { from?: string; to?: stri
     const session = getSessionTokens();
     if (!session?.accessToken) return;
 
-    const wsUrl = getWsUrl();
-    if (!wsUrl) return;
-
-    const socket: Socket = io(wsUrl, {
-      path: "/ws",
-      transports: ["websocket"],
-      auth: { token: session.accessToken, company_id: companyId },
-    });
+    let socket: Socket | null = null;
+    let cancelled = false;
 
     const onInvalidate = () => {
       void summary.refetch();
@@ -65,9 +53,24 @@ export function useMetrics(companyId?: string, range: { from?: string; to?: stri
       void timeline.refetch();
     };
 
-    socket.on("metrics.invalidate", onInvalidate);
+    void (async () => {
+      try {
+        const wsUrl = await resolveApiUrl();
+        if (cancelled) return;
+        socket = io(wsUrl, {
+          path: "/ws",
+          transports: ["websocket"],
+          auth: { token: session.accessToken, company_id: companyId },
+        });
+        socket.on("metrics.invalidate", onInvalidate);
+      } catch {
+        // ignore ws failures (metrics still work via polling/refetch)
+      }
+    })();
 
     return () => {
+      cancelled = true;
+      if (!socket) return;
       socket.off("metrics.invalidate", onInvalidate);
       socket.disconnect();
     };

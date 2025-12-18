@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { ValidationError } from "@wolfgang/contracts";
 
 import { CenturionsService } from "./centurions.service";
+import { normalizeHttpUrl } from "../../../common/utils/url";
 
 @Injectable()
 export class CenturionTestService {
@@ -11,7 +12,7 @@ export class CenturionTestService {
   async run(companyId: string, centurionId: string, message: string, opts?: { requestId?: string; correlationId?: string }) {
     await this.centurions.get(companyId, centurionId);
 
-    const base = (process.env.AGENT_RUNTIME_URL ?? "http://localhost:5000").replace(/\/+$/, "");
+    const base = normalizeHttpUrl(process.env.AGENT_RUNTIME_URL ?? "http://localhost:5000").replace(/\/+$/, "");
     const url = `${base}/centurions/${encodeURIComponent(centurionId)}/test`;
 
     const controller = new AbortController();

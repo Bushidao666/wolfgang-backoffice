@@ -1,9 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { normalizeBaseUrl } from "@/lib/url";
+
 const ACCESS_COOKIE = "bo_access_token";
 const REFRESH_COOKIE = "bo_refresh_token";
 
-const PUBLIC_PATHS = new Set(["/login", "/forgot-password", "/reset-password", "/api/health"]);
+const PUBLIC_PATHS = new Set(["/login", "/forgot-password", "/reset-password", "/api/health", "/api/runtime-config"]);
 
 function isPublic(pathname: string) {
   if (PUBLIC_PATHS.has(pathname)) return true;
@@ -36,8 +38,9 @@ async function tryRefresh(req: NextRequest): Promise<{ access_token: string; ref
   const refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
   if (!refreshToken) return null;
 
+  const apiBaseRaw = process.env.NEXT_PUBLIC_API_URL;
   const apiBase =
-    process.env.NEXT_PUBLIC_API_URL ?? (process.env.NODE_ENV === "production" ? null : "http://localhost:4000");
+    apiBaseRaw ? normalizeBaseUrl(apiBaseRaw) : (process.env.NODE_ENV === "production" ? null : "http://localhost:4000");
   if (!apiBase) return null;
   const res = await fetch(`${apiBase}/auth/refresh`, {
     method: "POST",

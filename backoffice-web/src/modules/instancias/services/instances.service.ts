@@ -1,8 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
-
-function getEvolutionManagerUrl() {
-  return process.env.NEXT_PUBLIC_EVOLUTION_MANAGER_URL ?? "http://localhost:4001";
-}
+import { resolveEvolutionManagerUrl } from "@/lib/runtime-config";
 
 export type ChannelType = "whatsapp" | "instagram" | "telegram";
 export type InstanceState = "connected" | "disconnected" | "qr_ready" | "error";
@@ -21,8 +18,9 @@ export type ChannelInstance = {
 };
 
 export async function listInstances(companyId: string) {
+  const baseUrl = await resolveEvolutionManagerUrl();
   return apiFetch<ChannelInstance[]>(`/instances?company_id=${encodeURIComponent(companyId)}`, {
-    baseUrl: getEvolutionManagerUrl(),
+    baseUrl,
   });
 }
 
@@ -33,50 +31,57 @@ export async function createInstance(input: {
   telegram_bot_token?: string;
   instagram_account_id?: string;
 }) {
+  const baseUrl = await resolveEvolutionManagerUrl();
   return apiFetch<ChannelInstance>("/instances", {
     method: "POST",
     body: JSON.stringify({ ...input, channel_type: input.channel_type ?? "whatsapp" }),
-    baseUrl: getEvolutionManagerUrl(),
+    baseUrl,
   });
 }
 
 export async function refreshInstanceStatus(instanceId: string) {
+  const baseUrl = await resolveEvolutionManagerUrl();
   return apiFetch<ChannelInstance>(`/instances/${encodeURIComponent(instanceId)}/status`, {
-    baseUrl: getEvolutionManagerUrl(),
+    baseUrl,
   });
 }
 
 export async function connectInstance(instanceId: string) {
+  const baseUrl = await resolveEvolutionManagerUrl();
   return apiFetch<{ qrcode: string | null }>(`/instances/${encodeURIComponent(instanceId)}/connect`, {
     method: "POST",
-    baseUrl: getEvolutionManagerUrl(),
+    baseUrl,
   });
 }
 
 export async function disconnectInstance(instanceId: string) {
+  const baseUrl = await resolveEvolutionManagerUrl();
   return apiFetch<void>(`/instances/${encodeURIComponent(instanceId)}/disconnect`, {
     method: "POST",
-    baseUrl: getEvolutionManagerUrl(),
+    baseUrl,
   });
 }
 
 export async function getInstanceQrCode(instanceId: string) {
+  const baseUrl = await resolveEvolutionManagerUrl();
   return apiFetch<{ qrcode: string | null }>(`/instances/${encodeURIComponent(instanceId)}/qrcode`, {
-    baseUrl: getEvolutionManagerUrl(),
+    baseUrl,
   });
 }
 
 export async function sendInstanceTestMessage(instanceId: string, input: { to: string; text: string }) {
+  const baseUrl = await resolveEvolutionManagerUrl();
   return apiFetch<{ ok: true }>(`/instances/${encodeURIComponent(instanceId)}/test`, {
     method: "POST",
     body: JSON.stringify(input),
-    baseUrl: getEvolutionManagerUrl(),
+    baseUrl,
   });
 }
 
 export async function deleteInstance(instanceId: string) {
+  const baseUrl = await resolveEvolutionManagerUrl();
   return apiFetch<void>(`/instances/${encodeURIComponent(instanceId)}`, {
     method: "DELETE",
-    baseUrl: getEvolutionManagerUrl(),
+    baseUrl,
   });
 }
