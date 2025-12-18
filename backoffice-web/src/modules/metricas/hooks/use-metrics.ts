@@ -13,7 +13,10 @@ import {
 } from "@/modules/metricas/services/metrics.service";
 
 function getWsUrl() {
-  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  const url = process.env.NEXT_PUBLIC_API_URL;
+  if (url) return url;
+  if (process.env.NODE_ENV === "production") return null;
+  return "http://localhost:4000";
 }
 
 export function useMetrics(companyId?: string, range: { from?: string; to?: string } = {}) {
@@ -46,7 +49,10 @@ export function useMetrics(companyId?: string, range: { from?: string; to?: stri
     const session = getSessionTokens();
     if (!session?.accessToken) return;
 
-    const socket: Socket = io(getWsUrl(), {
+    const wsUrl = getWsUrl();
+    if (!wsUrl) return;
+
+    const socket: Socket = io(wsUrl, {
       path: "/ws",
       transports: ["websocket"],
       auth: { token: session.accessToken, company_id: companyId },
@@ -69,4 +75,3 @@ export function useMetrics(companyId?: string, range: { from?: string; to?: stri
 
   return { summary, conversion, byCenturion, timeline };
 }
-

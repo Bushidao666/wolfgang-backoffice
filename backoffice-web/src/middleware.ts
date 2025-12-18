@@ -36,7 +36,9 @@ async function tryRefresh(req: NextRequest): Promise<{ access_token: string; ref
   const refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
   if (!refreshToken) return null;
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  const apiBase =
+    process.env.NEXT_PUBLIC_API_URL ?? (process.env.NODE_ENV === "production" ? null : "http://localhost:4000");
+  if (!apiBase) return null;
   const res = await fetch(`${apiBase}/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

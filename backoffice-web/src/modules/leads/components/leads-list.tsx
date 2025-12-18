@@ -19,7 +19,10 @@ function inferChannel(phone: string) {
 }
 
 function getWsUrl() {
-  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  const url = process.env.NEXT_PUBLIC_API_URL;
+  if (url) return url;
+  if (process.env.NODE_ENV === "production") return null;
+  return "http://localhost:4000";
 }
 
 export function LeadsList({ companyId }: { companyId: string }) {
@@ -51,7 +54,10 @@ export function LeadsList({ companyId }: { companyId: string }) {
     const session = getSessionTokens();
     if (!session?.accessToken) return;
 
-    const socket: Socket = io(getWsUrl(), {
+    const wsUrl = getWsUrl();
+    if (!wsUrl) return;
+
+    const socket: Socket = io(wsUrl, {
       path: "/ws",
       transports: ["websocket"],
       auth: { token: session.accessToken, company_id: companyId },

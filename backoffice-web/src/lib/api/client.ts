@@ -13,7 +13,12 @@ export class ApiError extends Error {
 }
 
 function getApiBaseUrl() {
-  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  const url = process.env.NEXT_PUBLIC_API_URL;
+  if (url) return url;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("NEXT_PUBLIC_API_URL is required in production (set it in your deployment env).");
+  }
+  return "http://localhost:4000";
 }
 
 async function parseJsonSafe(res: Response) {
