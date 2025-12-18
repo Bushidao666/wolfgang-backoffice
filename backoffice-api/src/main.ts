@@ -12,14 +12,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(LoggerService));
 
-  app.use(helmet());
-
   app.enableCors({
-    // Allow any origin (Railway + multiple frontends) and let CORS middleware reply to preflights.
-    // With credentials=true we cannot use "*" so we reflect the Origin header.
     origin: true,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Authorization", "Content-Type", "X-Company-Id", "X-Request-Id", "X-Correlation-Id"],
   });
+
+  app.use(helmet());
 
   app.useGlobalPipes(
     new ValidationPipe({
