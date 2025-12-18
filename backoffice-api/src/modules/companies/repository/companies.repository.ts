@@ -65,6 +65,40 @@ export class CompaniesRepository {
     return data as CompanyRow;
   }
 
+  async createCompanyFull(input: {
+    name: string;
+    slug: string;
+    document?: string;
+    settings?: Record<string, unknown>;
+    owner_user_id?: string;
+    integrations?: Array<{
+      provider: string;
+      mode: "global" | "custom" | "disabled";
+      credential_set_id?: string;
+      config_override?: Record<string, unknown>;
+      secrets_override_enc?: string;
+    }>;
+  }): Promise<{ company: CompanyRow; schema_name: string }> {
+    const payload = {
+      p_name: input.name,
+      p_slug: input.slug,
+      p_document: input.document ?? null,
+      p_owner_user_id: input.owner_user_id ?? null,
+      p_settings: input.settings ?? {},
+      p_integrations: input.integrations ?? null,
+    };
+
+    const { data, error } = await this.client().schema("core").rpc("fn_create_company_full", payload);
+    if (error) {
+      throw new ValidationError("Failed to create company", { error });
+    }
+    const out = data as unknown as { company?: CompanyRow; schema_name?: string } | null;
+    if (!out?.company?.id || !out.schema_name) {
+      throw new ValidationError("Provision function did not return company/schema", { data: out });
+    }
+    return { company: out.company, schema_name: out.schema_name };
+  }
+
   async updateCompany(
     id: string,
     patch: Partial<Pick<CompanyRow, "name" | "document" | "status" | "settings">>,

@@ -61,7 +61,12 @@ export function LeadsList({ companyId }: { companyId: string }) {
         if (cancelled) return;
         socket = io(wsUrl, {
           path: "/ws",
-          transports: ["websocket"],
+          transports: ["websocket", "polling"],
+          reconnection: true,
+          reconnectionAttempts: Infinity,
+          reconnectionDelay: 500,
+          reconnectionDelayMax: 5000,
+          timeout: 10_000,
           auth: { token: session.accessToken, company_id: companyId },
         });
         socket.on("lead.created", onLeadChanged);

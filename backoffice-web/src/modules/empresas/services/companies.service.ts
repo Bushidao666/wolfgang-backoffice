@@ -19,6 +19,17 @@ export type PaginatedCompanies = {
   total: number;
 };
 
+export type CompanyIntegrationProvider = "autentique" | "evolution" | "openai";
+export type CompanyIntegrationMode = "global" | "custom" | "disabled";
+
+export type CreateCompanyIntegration = {
+  provider: CompanyIntegrationProvider;
+  mode: CompanyIntegrationMode;
+  credential_set_id?: string;
+  config_override?: Record<string, unknown>;
+  secrets_override?: Record<string, unknown>;
+};
+
 export async function listCompanies(params: { page?: number; per_page?: number; q?: string; status?: string }) {
   const search = new URLSearchParams();
   if (params.page) search.set("page", String(params.page));
@@ -30,7 +41,12 @@ export async function listCompanies(params: { page?: number; per_page?: number; 
   return apiFetch<PaginatedCompanies>(`/companies${qs ? `?${qs}` : ""}`);
 }
 
-export async function createCompany(input: { name: string; document?: string; settings?: Record<string, unknown> }) {
+export async function createCompany(input: {
+  name: string;
+  document?: string;
+  settings?: Record<string, unknown>;
+  integrations?: CreateCompanyIntegration[];
+}) {
   return apiFetch<Company>("/companies", {
     method: "POST",
     body: JSON.stringify(input),
@@ -46,4 +62,3 @@ export async function updateCompany(
     body: JSON.stringify(input),
   });
 }
-

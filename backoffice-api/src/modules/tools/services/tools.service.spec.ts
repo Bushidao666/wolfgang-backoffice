@@ -18,6 +18,14 @@ function createQuery(result: any) {
 }
 
 describe("ToolsService", () => {
+  beforeEach(() => {
+    process.env.APP_ENCRYPTION_KEY_CURRENT = "test-key";
+  });
+
+  afterEach(() => {
+    delete process.env.APP_ENCRYPTION_KEY_CURRENT;
+  });
+
   it("rejects invalid JSON schemas", async () => {
     const q = createQuery({ data: null, error: null });
     const admin = { schema: jest.fn(() => ({ from: jest.fn(() => q) })) };
@@ -48,7 +56,9 @@ describe("ToolsService", () => {
       expect.objectContaining({
         method: "POST",
         headers: {},
+        headers_enc: "",
         auth_config: {},
+        auth_secrets_enc: "",
         timeout_ms: 10000,
         retry_count: 1,
         is_active: true,
@@ -57,11 +67,44 @@ describe("ToolsService", () => {
   });
 
   it("list returns data", async () => {
-    const q = createQuery({ data: [{ id: "t1" }], error: null });
+    const q = createQuery({
+      data: [
+        {
+          id: "t1",
+          company_id: "c1",
+          centurion_id: "cent1",
+          tool_name: "tool",
+          description: null,
+          endpoint: "http://example.com",
+          method: "POST",
+          auth_type: null,
+          auth_config: {},
+          input_schema: {},
+          output_schema: null,
+          timeout_ms: 10000,
+          retry_count: 1,
+          is_active: true,
+          headers_enc: "",
+          auth_secrets_enc: "",
+          created_at: "2025-01-01T00:00:00.000Z",
+          updated_at: "2025-01-01T00:00:00.000Z",
+        },
+      ],
+      error: null,
+    });
     const admin = { schema: jest.fn(() => ({ from: jest.fn(() => q) })) };
     const service = new ToolsService({ getAdminClient: jest.fn(() => admin as any) } as any);
 
-    await expect(service.list("c1", "cent1")).resolves.toEqual([{ id: "t1" }]);
+    await expect(service.list("c1", "cent1")).resolves.toEqual([
+      expect.objectContaining({
+        id: "t1",
+        tool_name: "tool",
+        headers: {},
+        has_headers: false,
+        auth_config: {},
+        has_auth_secrets: false,
+      }),
+    ]);
   });
 
   it("update throws when tool is missing", async () => {

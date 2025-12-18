@@ -71,6 +71,7 @@ describe("DocumentProcessorService", () => {
     const service = new DocumentProcessorService(
       { getAdminClient: jest.fn(() => admin as any) } as any,
       { get: jest.fn() } as any,
+      { resolve: jest.fn().mockResolvedValue(null) } as any,
     );
 
     await service.processDocument(docId);
@@ -122,6 +123,7 @@ describe("DocumentProcessorService", () => {
     const service = new DocumentProcessorService(
       { getAdminClient: jest.fn(() => admin as any) } as any,
       { get: jest.fn() } as any,
+      { resolve: jest.fn().mockResolvedValue(null) } as any,
     );
 
     await service.processDocument(docId);
@@ -136,9 +138,12 @@ describe("DocumentProcessorService", () => {
 
   it("embedChunks requires OPENAI_API_KEY", async () => {
     delete process.env.OPENAI_API_KEY;
-    const service = new DocumentProcessorService({ getAdminClient: jest.fn() } as any, { get: jest.fn() } as any);
+    const service = new DocumentProcessorService(
+      { getAdminClient: jest.fn() } as any,
+      { get: jest.fn() } as any,
+      { resolve: jest.fn().mockResolvedValue(null) } as any,
+    );
 
-    await expect((service as any)._embedChunks(["a"])).rejects.toBeInstanceOf(ValidationError);
+    await expect((service as any)._embedChunks("c1", ["a"])).rejects.toBeInstanceOf(ValidationError);
   });
 });
-

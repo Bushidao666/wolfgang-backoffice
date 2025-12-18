@@ -49,10 +49,10 @@ async def test_embedding_service_uses_cache_and_calls_openai_for_missing(monkeyp
     redis = _FakeRedis()
     svc = EmbeddingService(redis=redis)  # type: ignore[arg-type]
 
-    hello_key = svc._cache_key("hello")  # noqa: SLF001
+    hello_key = svc._cache_key(company_id="c1", model="emb", text="hello")  # noqa: SLF001
     redis.kv[hello_key] = json.dumps([0.1, 0.2])
 
-    vecs = await svc.embed(["hello", "world", ""])
+    vecs = await svc.embed(company_id="c1", texts=["hello", "world", ""])
     assert vecs[0] == [0.1, 0.2]
     assert vecs[1] == [0.9, 0.8]
     assert vecs[2] == []
@@ -61,4 +61,3 @@ async def test_embedding_service_uses_cache_and_calls_openai_for_missing(monkeyp
 
 def test_format_vector():
     assert format_vector([1.0, 2.5]) == "[1.00000000,2.50000000]"
-

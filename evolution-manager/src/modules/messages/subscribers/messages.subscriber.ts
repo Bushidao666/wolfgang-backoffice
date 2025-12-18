@@ -33,17 +33,17 @@ export class MessagesSubscriber implements OnModuleInit, OnModuleDestroy {
       if (!parsed.success) return;
       const event = parsed.data;
 
-      const instance = await this.instances.getById(event.payload.instance_id);
+      const instance = await this.instances.getByIdWithSecrets(event.payload.instance_id);
 
       for (const msg of event.payload.messages) {
         if (msg.type === "text") {
           if (instance.channel_type === "whatsapp") {
-            await this.evolution.sendText(instance.instance_name, event.payload.to, msg.text);
+            await this.evolution.sendText(instance.company_id, instance.instance_name, event.payload.to, msg.text);
           } else if (instance.channel_type === "telegram") {
-            if (!instance.telegram_bot_token) continue;
-            await this.telegram.sendText(instance.telegram_bot_token, event.payload.to, msg.text);
+            if (!instance.telegram_bot_token_resolved) continue;
+            await this.telegram.sendText(instance.telegram_bot_token_resolved, event.payload.to, msg.text);
           } else if (instance.channel_type === "instagram") {
-            await this.instagram.sendText(instance.instance_name, event.payload.to, msg.text);
+            await this.instagram.sendText(instance.company_id, instance.instance_name, event.payload.to, msg.text);
           }
         }
       }

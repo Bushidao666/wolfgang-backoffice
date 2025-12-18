@@ -25,11 +25,17 @@ export class ToolResponseDto {
   @ApiProperty({ type: Object })
   headers!: Record<string, unknown>;
 
+  @ApiProperty({ description: "True when headers_enc is non-empty" })
+  has_headers!: boolean;
+
   @ApiPropertyOptional()
   auth_type?: string | null;
 
   @ApiProperty({ type: Object })
   auth_config!: Record<string, unknown>;
+
+  @ApiProperty({ description: "True when auth_secrets_enc is non-empty" })
+  has_auth_secrets!: boolean;
 
   @ApiProperty({ type: Object })
   input_schema!: Record<string, unknown>;
@@ -52,4 +58,3 @@ export class ToolResponseDto {
   @ApiProperty()
   updated_at!: string;
 }
-

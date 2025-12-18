@@ -184,7 +184,8 @@ async def test_handle_message_received_processes_audio_media(monkeypatch):
         assert url == "http://example.test/a"
         return b"audio", "audio/ogg"
 
-    async def transcribe(*, audio_bytes: bytes, filename: str = "audio.ogg"):  # noqa: ARG001
+    async def transcribe(*, company_id: str, audio_bytes: bytes, filename: str = "audio.ogg"):  # noqa: ARG001
+        assert company_id == "co1"
         assert audio_bytes == b"audio"
         return "transcribed"
 

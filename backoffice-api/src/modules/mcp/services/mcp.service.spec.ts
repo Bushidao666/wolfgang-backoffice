@@ -16,12 +16,47 @@ function createQuery(result: any) {
 }
 
 describe("McpService", () => {
+  beforeEach(() => {
+    process.env.APP_ENCRYPTION_KEY_CURRENT = "test-key";
+  });
+
+  afterEach(() => {
+    delete process.env.APP_ENCRYPTION_KEY_CURRENT;
+  });
+
   it("list returns data and throws on error", async () => {
-    const q = createQuery({ data: [{ id: "s1" }], error: null });
+    const q = createQuery({
+      data: [
+        {
+          id: "s1",
+          company_id: "c1",
+          centurion_id: "cent1",
+          name: "srv",
+          server_url: "http://mcp",
+          auth_type: null,
+          auth_config: {},
+          auth_secrets_enc: "",
+          tools_available: [],
+          last_tools_sync_at: null,
+          is_active: true,
+          connection_status: "unknown",
+          last_error: null,
+          created_at: "2025-01-01T00:00:00.000Z",
+          updated_at: "2025-01-01T00:00:00.000Z",
+        },
+      ],
+      error: null,
+    });
     const admin = { schema: jest.fn(() => ({ from: jest.fn(() => q) })) };
     const service = new McpService({ getAdminClient: jest.fn(() => admin as any) } as any);
 
-    await expect(service.list("c1", "cent1")).resolves.toEqual([{ id: "s1" }]);
+    await expect(service.list("c1", "cent1")).resolves.toEqual([
+      expect.objectContaining({
+        id: "s1",
+        auth_config: {},
+        has_auth_secrets: false,
+      }),
+    ]);
 
     q.then = (resolve: any, reject: any) => Promise.resolve({ data: null, error: { message: "fail" } }).then(resolve, reject);
     await expect(service.list("c1", "cent1")).rejects.toBeInstanceOf(ValidationError);
@@ -36,6 +71,7 @@ describe("McpService", () => {
     expect(q.insert).toHaveBeenCalledWith(
       expect.objectContaining({
         auth_config: {},
+        auth_secrets_enc: "",
         is_active: true,
       }),
     );

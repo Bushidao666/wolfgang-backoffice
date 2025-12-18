@@ -76,6 +76,8 @@ export function ToolForm({
   const [outputSchemaJson, setOutputSchemaJson] = React.useState(() => (tool?.output_schema ? stringifyJson(tool.output_schema, "{}") : ""));
 
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [updateHeaders, setUpdateHeaders] = React.useState(!tool);
+  const [updateAuthConfig, setUpdateAuthConfig] = React.useState(!tool);
 
   React.useEffect(() => {
     form.reset({
@@ -88,8 +90,10 @@ export function ToolForm({
       retry_count: tool?.retry_count ?? 1,
       is_active: tool?.is_active ?? true,
     });
-    setHeadersJson(stringifyJson(tool?.headers ?? {}, "{}"));
-    setAuthConfigJson(stringifyJson(tool?.auth_config ?? {}, "{}"));
+    setUpdateHeaders(!tool);
+    setUpdateAuthConfig(!tool);
+    setHeadersJson("{}");
+    setAuthConfigJson("{}");
     setInputSchemaJson(
       stringifyJson(tool?.input_schema ?? { type: "object", properties: {} }, "{\\n  \\\"type\\\": \\\"object\\\",\\n  \\\"properties\\\": {}\\n}"),
     );
@@ -100,9 +104,12 @@ export function ToolForm({
   const onSubmit = React.useCallback(
     async (values: FormValues) => {
       const nextErrors: Record<string, string> = {};
-      const headersParsed = parseJson(headersJson, "Headers");
+      const shouldSendHeaders = !tool || updateHeaders;
+      const shouldSendAuth = !tool || updateAuthConfig;
+
+      const headersParsed = shouldSendHeaders ? parseJson(headersJson, "Headers") : { value: undefined };
       if (headersParsed.error) nextErrors.headers = headersParsed.error;
-      const authParsed = parseJson(authConfigJson, "Auth config");
+      const authParsed = shouldSendAuth ? parseJson(authConfigJson, "Auth config") : { value: undefined };
       if (authParsed.error) nextErrors.auth_config = authParsed.error;
       const inputParsed = parseJson(inputSchemaJson, "Input schema");
       if (inputParsed.error) nextErrors.input_schema = inputParsed.error;
@@ -119,9 +126,9 @@ export function ToolForm({
         description: values.description.trim() ? values.description.trim() : undefined,
         endpoint: values.endpoint.trim(),
         method: values.method,
-        headers: headersParsed.value ?? {},
+        ...(shouldSendHeaders ? { headers: headersParsed.value ?? {} } : {}),
         auth_type: values.auth_type.trim() && values.auth_type.trim() !== "none" ? values.auth_type.trim() : undefined,
-        auth_config: authParsed.value ?? {},
+        ...(shouldSendAuth ? { auth_config: authParsed.value ?? {} } : {}),
         input_schema: inputParsed.value ?? {},
         output_schema: outputParsed.value,
         timeout_ms: values.timeout_ms,
@@ -138,7 +145,7 @@ export function ToolForm({
       onSaved();
       onOpenChange(false);
     },
-    [authConfigJson, centurionId, companyId, headersJson, inputSchemaJson, onOpenChange, onSaved, outputSchemaJson, tool],
+    [authConfigJson, centurionId, companyId, headersJson, inputSchemaJson, onOpenChange, onSaved, outputSchemaJson, tool, updateAuthConfig, updateHeaders],
   );
 
   return (
@@ -204,8 +211,20 @@ export function ToolForm({
             onChange={(v) => setHeadersJson(v)}
             error={errors.headers}
             rows={6}
-            helperText='Ex: { "x-api-key": "..." }'
+            helperText={
+              tool
+                ? `Segredos não são exibidos. Atual: ${tool.has_headers ? "configurado" : "—"}`
+                : 'Ex: { "x-api-key": "..." }'
+            }
+            disabled={!!tool && !updateHeaders}
           />
+
+          {tool ? (
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <input type="checkbox" className="h-4 w-4" checked={updateHeaders} onChange={(e) => setUpdateHeaders(e.target.checked)} />
+              Atualizar headers (requer re-informar valores)
+            </label>
+          ) : null}
 
           <SchemaEditor
             label="Auth config (JSON)"
@@ -213,8 +232,20 @@ export function ToolForm({
             onChange={(v) => setAuthConfigJson(v)}
             error={errors.auth_config}
             rows={6}
-            helperText='Ex (bearer): { "token": "..." } | Ex (api_key): { "header_name": "x-api-key", "key": "..." }'
+            helperText={
+              tool
+                ? `Segredos não são exibidos. Atual: ${tool.has_auth_secrets ? "configurado" : "—"}`
+                : 'Ex (bearer): { "token": "..." } | Ex (api_key): { "header_name": "x-api-key", "key": "..." }'
+            }
+            disabled={!!tool && !updateAuthConfig}
           />
+
+          {tool ? (
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <input type="checkbox" className="h-4 w-4" checked={updateAuthConfig} onChange={(e) => setUpdateAuthConfig(e.target.checked)} />
+              Atualizar auth config (requer re-informar valores)
+            </label>
+          ) : null}
 
           <SchemaEditor
             label="Input schema (JSON Schema)"

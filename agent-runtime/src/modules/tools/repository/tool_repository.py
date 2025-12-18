@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from common.infrastructure.database.supabase_client import SupabaseDb
+from common.infrastructure.integrations.crypto import decrypt_json
 from modules.tools.domain.tool import McpServerConfig, ToolConfig
 
 
@@ -27,6 +28,12 @@ class ToolRepository:
         )
         tools: list[ToolConfig] = []
         for r in rows:
+            headers_enc = str(r.get("headers_enc") or "").strip()
+            auth_secrets_enc = str(r.get("auth_secrets_enc") or "").strip()
+
+            headers = decrypt_json(headers_enc) if headers_enc else dict(r.get("headers") or {})
+            auth_config = decrypt_json(auth_secrets_enc) if auth_secrets_enc else dict(r.get("auth_config") or {})
+
             tools.append(
                 ToolConfig(
                     id=str(r["id"]),
@@ -36,9 +43,9 @@ class ToolRepository:
                     description=str(r["description"]) if r.get("description") else None,
                     endpoint=str(r["endpoint"]),
                     method=str(r.get("method") or "POST"),
-                    headers=dict(r.get("headers") or {}),
+                    headers=headers,
                     auth_type=str(r["auth_type"]) if r.get("auth_type") else None,
-                    auth_config=dict(r.get("auth_config") or {}),
+                    auth_config=auth_config,
                     input_schema=dict(r.get("input_schema") or {}),
                     output_schema=dict(r.get("output_schema") or {}) if r.get("output_schema") else None,
                     timeout_ms=int(r.get("timeout_ms") or 10_000),
@@ -63,6 +70,9 @@ class ToolRepository:
         )
         servers: list[McpServerConfig] = []
         for r in rows:
+            auth_secrets_enc = str(r.get("auth_secrets_enc") or "").strip()
+            auth_config = decrypt_json(auth_secrets_enc) if auth_secrets_enc else dict(r.get("auth_config") or {})
+
             last_sync: datetime | None = r.get("last_tools_sync_at")
             tools_available = r.get("tools_available") or []
             servers.append(
@@ -73,7 +83,7 @@ class ToolRepository:
                     name=str(r["name"]),
                     server_url=str(r["server_url"]),
                     auth_type=str(r["auth_type"]) if r.get("auth_type") else None,
-                    auth_config=dict(r.get("auth_config") or {}),
+                    auth_config=auth_config,
                     tools_available=list(tools_available) if isinstance(tools_available, list) else [],
                     last_tools_sync_at=last_sync,
                     is_active=bool(r.get("is_active") if r.get("is_active") is not None else True),

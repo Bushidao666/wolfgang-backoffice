@@ -7,10 +7,7 @@ function createRepoMock(overrides: Partial<any> = {}) {
     listCompanies: jest.fn(),
     getPrimarySchemaName: jest.fn(),
     existsBySlug: jest.fn(),
-    createCompany: jest.fn(),
-    ensureDefaultCenturionConfig: jest.fn(),
-    upsertCompanyCrm: jest.fn(),
-    deleteCompany: jest.fn(),
+    createCompanyFull: jest.fn(),
     getCompanyById: jest.fn(),
     updateCompany: jest.fn(),
     archiveCompany: jest.fn(),
@@ -33,9 +30,7 @@ describe("CompaniesService", () => {
       }),
       getPrimarySchemaName: jest.fn().mockResolvedValue("tenant_a"),
     });
-    const provisioner = { provisionSchema: jest.fn() } as any;
-
-    const service = new CompaniesService(repo as any, provisioner);
+    const service = new CompaniesService(repo as any);
     const res = await service.list({ page: 2, per_page: 10 });
 
     expect(res.page).toBe(2);
@@ -47,92 +42,75 @@ describe("CompaniesService", () => {
   it("create generates slug and provisions schema", async () => {
     const repo = createRepoMock({
       existsBySlug: jest.fn().mockResolvedValue(false),
-      createCompany: jest.fn().mockResolvedValue({
-        id: "c1",
-        name: "Empresa X",
-        slug: "empresa_x",
-        document: null,
-        status: "active",
-        settings: {},
-        created_at: "t",
-        updated_at: "t",
+      createCompanyFull: jest.fn().mockResolvedValue({
+        company: {
+          id: "c1",
+          name: "Empresa X",
+          slug: "empresa_x",
+          document: null,
+          status: "active",
+          settings: {},
+          created_at: "t",
+          updated_at: "t",
+        },
+        schema_name: "tenant_empresa_x",
       }),
-      ensureDefaultCenturionConfig: jest.fn().mockResolvedValue(undefined),
-      upsertCompanyCrm: jest.fn().mockResolvedValue(undefined),
-      deleteCompany: jest.fn().mockResolvedValue(undefined),
     });
-    const provisioner = { provisionSchema: jest.fn().mockResolvedValue("tenant_empresa_x") } as any;
-
-    const service = new CompaniesService(repo as any, provisioner);
+    const service = new CompaniesService(repo as any);
     const res = await service.create({ name: "Empresa X" }, "owner");
 
     expect(res.slug).toBe("empresa_x");
     expect(res.schema_name).toBe("tenant_empresa_x");
-    expect(repo.ensureDefaultCenturionConfig).toHaveBeenCalledWith("c1");
+    expect(repo.createCompanyFull).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Empresa X", slug: "empresa_x", owner_user_id: "owner" }),
+    );
   });
 
   it("create appends suffix when slug already exists", async () => {
     jest.spyOn(Date, "now").mockReturnValue(1700000000000);
     const repo = createRepoMock({
-      existsBySlug: jest.fn().mockImplementation(async (slug: string) => slug === "empresa_x"),
-      createCompany: jest.fn().mockResolvedValue({
-        id: "c1",
-        name: "Empresa X",
-        slug: "empresa_x_krd8m0",
-        document: null,
-        status: "active",
-        settings: {},
-        created_at: "t",
-        updated_at: "t",
-      }),
-      ensureDefaultCenturionConfig: jest.fn().mockResolvedValue(undefined),
-      upsertCompanyCrm: jest.fn().mockResolvedValue(undefined),
-      deleteCompany: jest.fn().mockResolvedValue(undefined),
+      createCompanyFull: jest
+        .fn()
+        .mockRejectedValueOnce(new ValidationError("duplicate"))
+        .mockResolvedValueOnce({
+          company: {
+            id: "c1",
+            name: "Empresa X",
+            slug: "empresa_x_krd8m0",
+            document: null,
+            status: "active",
+            settings: {},
+            created_at: "t",
+            updated_at: "t",
+          },
+          schema_name: "tenant_empresa_x_krd8m0",
+        }),
     });
-    const provisioner = { provisionSchema: jest.fn().mockResolvedValue("tenant_empresa_x") } as any;
-
-    const service = new CompaniesService(repo as any, provisioner);
+    const service = new CompaniesService(repo as any);
     const res = await service.create({ name: "Empresa X" }, "owner");
 
     expect(res.slug).toMatch(/^empresa_x_/);
-    expect(repo.existsBySlug).toHaveBeenCalled();
+    expect(repo.createCompanyFull).toHaveBeenCalledTimes(2);
   });
 
-  it("create rolls back company when provisioning fails", async () => {
+  it("create fails when provisioning fails", async () => {
     const repo = createRepoMock({
       existsBySlug: jest.fn().mockResolvedValue(false),
-      createCompany: jest.fn().mockResolvedValue({
-        id: "c1",
-        name: "Empresa X",
-        slug: "empresa_x",
-        document: null,
-        status: "active",
-        settings: {},
-        created_at: "t",
-        updated_at: "t",
-      }),
-      ensureDefaultCenturionConfig: jest.fn().mockResolvedValue(undefined),
-      deleteCompany: jest.fn().mockResolvedValue(undefined),
+      createCompanyFull: jest.fn().mockRejectedValue(new ValidationError("fail")),
     });
-    const provisioner = { provisionSchema: jest.fn().mockRejectedValue(new ValidationError("fail")) } as any;
-
-    const service = new CompaniesService(repo as any, provisioner);
+    const service = new CompaniesService(repo as any);
     await expect(service.create({ name: "Empresa X" }, "owner")).rejects.toBeInstanceOf(ValidationError);
-    expect(repo.deleteCompany).toHaveBeenCalledWith("c1");
   });
 
   it("getById throws NotFoundError when missing", async () => {
     const repo = createRepoMock({ getCompanyById: jest.fn().mockResolvedValue(null) });
-    const provisioner = { provisionSchema: jest.fn() } as any;
-    const service = new CompaniesService(repo as any, provisioner);
+    const service = new CompaniesService(repo as any);
     await expect(service.getById("c1")).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it("update throws NotFoundError when missing", async () => {
     const repo = createRepoMock({ getCompanyById: jest.fn().mockResolvedValue(null) });
-    const provisioner = { provisionSchema: jest.fn() } as any;
-    const service = new CompaniesService(repo as any, provisioner);
+    const service = new CompaniesService(repo as any);
     await expect(service.update("c1", { name: "X" })).rejects.toBeInstanceOf(NotFoundError);
   });
 });
-

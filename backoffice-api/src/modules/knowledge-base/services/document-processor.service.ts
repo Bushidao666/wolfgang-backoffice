@@ -4,6 +4,7 @@ import { ConfigService } from "@nestjs/config";
 import { ValidationError } from "@wolfgang/contracts";
 
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
+import { IntegrationsResolverService } from "../../integrations/services/integrations-resolver.service";
 
 type KnowledgeDocumentRow = {
   id: string;
@@ -66,7 +67,11 @@ export class DocumentProcessorService implements OnModuleInit, OnModuleDestroy {
   private processing = false;
   private readonly bucket = "knowledge_base";
 
-  constructor(private readonly supabase: SupabaseService, private readonly configService: ConfigService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly configService: ConfigService,
+    private readonly integrations: IntegrationsResolverService,
+  ) {}
 
   private admin() {
     return this.supabase.getAdminClient();
@@ -123,7 +128,7 @@ export class DocumentProcessorService implements OnModuleInit, OnModuleDestroy {
         return;
       }
 
-      const embeddings = await this._embedChunks(chunks);
+      const embeddings = await this._embedChunks(claimed.company_id, chunks);
       if (embeddings.length !== chunks.length) {
         await this._markError(documentId, "Embedding generation failed", claimed.metadata ?? undefined);
         return;
@@ -181,14 +186,24 @@ export class DocumentProcessorService implements OnModuleInit, OnModuleDestroy {
     return Buffer.from(arrayBuffer);
   }
 
-  private async _embedChunks(chunks: string[]): Promise<number[][]> {
-    const apiKey = process.env.OPENAI_API_KEY?.trim();
-    if (!apiKey) {
-      throw new ValidationError("OPENAI_API_KEY is required to process Knowledge Base embeddings");
-    }
+  private async _embedChunks(companyId: string, chunks: string[]): Promise<number[][]> {
+    const resolved = await this.integrations.resolve(companyId, "openai").catch(() => null);
 
-    const base = (process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1").replace(/\/+$/, "");
-    const model = process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small";
+    const apiKey =
+      (resolved && typeof resolved.secrets["api_key"] === "string" ? String(resolved.secrets["api_key"]) : "") ||
+      process.env.OPENAI_API_KEY?.trim() ||
+      "";
+    if (!apiKey) throw new ValidationError("OpenAI api_key is required to process Knowledge Base embeddings");
+
+    const base =
+      (resolved && typeof resolved.config["base_url"] === "string" ? String(resolved.config["base_url"]) : "") ||
+      process.env.OPENAI_BASE_URL ||
+      "https://api.openai.com/v1";
+
+    const model =
+      (resolved && typeof resolved.config["embedding_model"] === "string" ? String(resolved.config["embedding_model"]) : "") ||
+      process.env.OPENAI_EMBEDDING_MODEL ||
+      "text-embedding-3-small";
 
     const results: number[][] = [];
     const batchSize = Number(process.env.KB_EMBED_BATCH ?? 32);
@@ -196,7 +211,7 @@ export class DocumentProcessorService implements OnModuleInit, OnModuleDestroy {
     for (let i = 0; i < chunks.length; i += batchSize) {
       const input = chunks.slice(i, i + batchSize);
 
-      const res = await fetch(`${base}/embeddings`, {
+      const res = await fetch(`${String(base).replace(/\/+$/, "")}/embeddings`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${apiKey}`,

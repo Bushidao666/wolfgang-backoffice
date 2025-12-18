@@ -18,6 +18,8 @@
     "@nestjs/swagger": "^7.4.2",
     "@supabase/supabase-js": "^2.57.0",
     "@wolfgang/contracts": "0.1.0",
+    "@wolfgang/crypto": "0.1.0",
+    "@wolfgang/integrations": "0.1.0",
     "@wolfgang/logger": "0.1.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",

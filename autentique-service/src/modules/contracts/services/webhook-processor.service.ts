@@ -4,11 +4,12 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { ValidationError } from "@wolfgang/contracts";
 import { RedisChannels } from "@wolfgang/contracts";
 
-import { AutentiqueClient } from "../../../infrastructure/autentique/autentique.client";
+import { AutentiqueClient, type AutentiqueCredentials } from "../../../infrastructure/autentique/autentique.client";
 import { EventBusService } from "../../../infrastructure/messaging/event-bus.service";
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
 import { LoggerService } from "../../../common/logging/logger.service";
 import { buildContractSignedEvent } from "../events/contract-signed.event";
+import { AutentiqueIntegrationService } from "./autentique-integration.service";
 
 function safeString(value: unknown): string | null {
   if (typeof value === "string" && value.trim()) return value;
@@ -31,6 +32,7 @@ export class WebhookProcessorService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly autentique: AutentiqueClient,
+    private readonly integrations: AutentiqueIntegrationService,
     private readonly events: EventBusService,
     private readonly logger: LoggerService,
   ) {}
@@ -39,25 +41,73 @@ export class WebhookProcessorService {
     return this.supabase.getAdminClient();
   }
 
+  async processAutentiqueWebhookForCredentialSet(args: {
+    credential_set_id: string;
+    raw_body: Buffer | undefined;
+    payload: unknown;
+    signature?: string | undefined;
+    request_id?: string | undefined;
+  }) {
+    const resolved = await this.integrations.resolveForCredentialSetId(args.credential_set_id);
+    await this.processAutentiqueWebhookWithCredentials({
+      ...args,
+      autentique: { api_key: resolved.api_key, base_url: resolved.base_url, webhook_secret: resolved.webhook_secret },
+    });
+  }
+
+  async processAutentiqueWebhookForCompany(args: {
+    company_id: string;
+    raw_body: Buffer | undefined;
+    payload: unknown;
+    signature?: string | undefined;
+    request_id?: string | undefined;
+  }) {
+    const resolved = await this.integrations.resolveForCompany(args.company_id);
+    await this.processAutentiqueWebhookWithCredentials({
+      ...args,
+      autentique: { api_key: resolved.api_key, base_url: resolved.base_url, webhook_secret: resolved.webhook_secret },
+    });
+  }
+
   async processAutentiqueWebhook(args: {
     raw_body: Buffer | undefined;
     payload: unknown;
     signature?: string | undefined;
     request_id?: string | undefined;
   }) {
-    const secret = process.env.AUTENTIQUE_WEBHOOK_SECRET ?? "";
-    if (secret) {
-      const signature = safeString(args.signature);
-      if (!signature) throw new ValidationError("Missing X-Autentique-Signature");
+    const secret = (process.env.AUTENTIQUE_WEBHOOK_SECRET ?? "").trim();
+    const apiKey = (process.env.AUTENTIQUE_API_KEY ?? "").trim();
+    const baseUrl = (process.env.AUTENTIQUE_BASE_URL ?? "https://api.autentique.com.br").trim();
 
-      const rawBody = args.raw_body ?? Buffer.from(JSON.stringify(args.payload));
-      const calculated = computeHmacSha256(secret, rawBody);
-      if (!secureCompareHex(calculated, signature)) {
-        // fallback for payload re-stringification (when raw body isn't available)
-        const fallback = computeHmacSha256(secret, Buffer.from(JSON.stringify(args.payload)));
-        if (!secureCompareHex(fallback, signature)) {
-          throw new ValidationError("Invalid webhook signature");
-        }
+    if (!secret) {
+      throw new ValidationError("AUTENTIQUE_WEBHOOK_SECRET is required to verify webhook signatures");
+    }
+    if (!apiKey) {
+      throw new ValidationError("AUTENTIQUE_API_KEY is required to process Autentique webhooks (legacy endpoint)");
+    }
+
+    await this.processAutentiqueWebhookWithCredentials({
+      ...args,
+      autentique: { api_key: apiKey, base_url: baseUrl, webhook_secret: secret },
+    });
+  }
+
+  private async processAutentiqueWebhookWithCredentials(args: {
+    raw_body: Buffer | undefined;
+    payload: unknown;
+    signature?: string | undefined;
+    request_id?: string | undefined;
+    autentique: { api_key: string; base_url: string; webhook_secret: string };
+  }) {
+    const signature = safeString(args.signature);
+    if (!signature) throw new ValidationError("Missing X-Autentique-Signature");
+
+    const rawBody = args.raw_body ?? Buffer.from(JSON.stringify(args.payload));
+    const calculated = computeHmacSha256(args.autentique.webhook_secret, rawBody);
+    if (!secureCompareHex(calculated, signature)) {
+      const fallback = computeHmacSha256(args.autentique.webhook_secret, Buffer.from(JSON.stringify(args.payload)));
+      if (!secureCompareHex(fallback, signature)) {
+        throw new ValidationError("Invalid webhook signature");
       }
     }
 
@@ -77,7 +127,11 @@ export class WebhookProcessorService {
         this.logger.warn("webhook.signature_missing_document", { request_id: args.request_id });
         return;
       }
-      await this.markSigned({ document_id: documentId, signed_at: signedAt });
+      await this.markSigned({
+        document_id: documentId,
+        signed_at: signedAt,
+        credentials: { api_key: args.autentique.api_key, base_url: args.autentique.base_url },
+      });
       return;
     }
 
@@ -87,7 +141,11 @@ export class WebhookProcessorService {
         this.logger.warn("webhook.document_missing_id", { request_id: args.request_id });
         return;
       }
-      await this.markSigned({ document_id: documentId, signed_at: new Date().toISOString() });
+      await this.markSigned({
+        document_id: documentId,
+        signed_at: new Date().toISOString(),
+        credentials: { api_key: args.autentique.api_key, base_url: args.autentique.base_url },
+      });
       return;
     }
 
@@ -102,7 +160,7 @@ export class WebhookProcessorService {
     this.logger.debug("webhook.ignored", { request_id: args.request_id, event_type: eventType });
   }
 
-  private async markSigned(args: { document_id: string; signed_at: string }) {
+  private async markSigned(args: { document_id: string; signed_at: string; credentials: AutentiqueCredentials }) {
     const { data: contract, error } = await this.admin()
       .schema("core")
       .from("contracts")
@@ -118,12 +176,23 @@ export class WebhookProcessorService {
     const companyId = String((contract as any).company_id);
     const dealIndexId = (contract as any).deal_index_id ? String((contract as any).deal_index_id) : null;
 
+    let resolvedCredentials = args.credentials;
+    const credentialSetId = (contract as any).autentique_credential_set_id ? String((contract as any).autentique_credential_set_id) : null;
+    if (credentialSetId) {
+      try {
+        const set = await this.integrations.resolveForCredentialSetId(credentialSetId);
+        resolvedCredentials = { api_key: set.api_key, base_url: set.base_url };
+      } catch {
+        resolvedCredentials = args.credentials;
+      }
+    }
+
     let signedFilePath: string | null = null;
     try {
-      const doc = (await this.autentique.getDocument(args.document_id)) as any;
+      const doc = (await this.autentique.getDocument(resolvedCredentials, args.document_id)) as any;
       const signedUrl = safeString(doc?.files?.signed) ?? safeString(doc?.files?.pades) ?? null;
       if (signedUrl && dealIndexId) {
-        const buf = await this.autentique.downloadSignedFile(signedUrl);
+        const buf = await this.autentique.downloadSignedFile(resolvedCredentials, signedUrl);
         signedFilePath = `${companyId}/${dealIndexId}/${contractId}/signed.pdf`;
         const { error: uploadError } = await this.admin().storage.from("deal_files").upload(signedFilePath, buf, {
           contentType: "application/pdf",

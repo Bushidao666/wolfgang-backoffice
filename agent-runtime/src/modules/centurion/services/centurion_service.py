@@ -10,6 +10,7 @@ from typing import Any
 from common.config.settings import get_settings
 from common.infrastructure.cache.redis_client import RedisClient
 from common.infrastructure.database.supabase_client import SupabaseDb
+from common.infrastructure.integrations.openai_resolver import OpenAIResolver
 from common.infrastructure.metrics.prometheus import DOMAIN_EVENTS_TOTAL, LEADS_QUALIFIED_TOTAL
 from modules.centurion.domain.message import Message as DomainMessage
 from modules.centurion.repository.config_repository import ConfigRepository
@@ -50,11 +51,12 @@ class CenturionService:
         self._rag = RagAdapter(db=db, redis=redis)
         self._kb = KnowledgeBaseAdapter(db=db, redis=redis)
         self._fact_repo = FactRepository(db)
-        self._embeddings = EmbeddingService(redis=redis)
-        self._fact_extractor = FactExtractor()
+        self._embeddings = EmbeddingService(db=db, redis=redis)
+        self._fact_extractor = FactExtractor(db=db)
         self._tools = ToolRegistry(repo=ToolRepository(db))
         self._followups = FollowupService(db=db, redis=redis)
         self._handoff = HandoffService(db=db)
+        self._openai = OpenAIResolver(db)
 
     async def test_centurion(self, *, company_id: str, centurion_id: str, message: str) -> dict[str, Any]:
         row = await self._db.fetchrow(
@@ -73,8 +75,8 @@ class CenturionService:
         if not response_text:
             raise RuntimeError("LLM returned empty response")
 
-        settings = get_settings()
-        return {"ok": True, "model": settings.openai_chat_model, "response": response_text, "usage": {}}
+        resolved = await self._openai.resolve_optional(company_id=company_id)
+        return {"ok": True, "model": (resolved.chat_model if resolved else get_settings().openai_chat_model), "response": response_text, "usage": {}}
 
     async def process_due_conversation(self, conversation_id: str, *, causation_id: str | None = None) -> None:
         await self._conv_repo.mark_processing(conversation_id)
@@ -116,9 +118,9 @@ class CenturionService:
 
         rag_items = []
         kb_items = []
-        if get_settings().openai_api_key:
+        if await self._openai.resolve_optional(company_id=company_id):
             try:
-                rag_items = await self._rag.get_relevant_context(lead_id=lead_id, query=consolidated, top_k=5)
+                rag_items = await self._rag.get_relevant_context(company_id=company_id, lead_id=lead_id, query=consolidated, top_k=5)
             except Exception:
                 logger.exception("rag.lookup_failed")
             try:
@@ -263,8 +265,8 @@ class CenturionService:
         company_id: str,
         centurion_id: str,
     ) -> str | None:
-        settings = get_settings()
-        if not settings.openai_api_key:
+        resolved = await self._openai.resolve_optional(company_id=company_id)
+        if not resolved:
             # Fallback determinístico (sem dependência externa): pergunta sobre critérios faltantes.
             required = list((config.get("qualification_rules") or {}).get("required_fields") or [])
             if required:
@@ -295,9 +297,9 @@ class CenturionService:
 
         agent = Agent(
             model=OpenAIChat(
-                id=settings.openai_chat_model,
-                api_key=settings.openai_api_key,
-                base_url=settings.openai_base_url,
+                id=resolved.chat_model,
+                api_key=resolved.api_key,
+                base_url=resolved.base_url,
                 temperature=0.3,
                 timeout=30.0,
             ),
@@ -349,12 +351,12 @@ class CenturionService:
 
     async def _update_long_term_memory(self, *, company_id: str, lead_id: str, conversation_text: str) -> None:
         try:
-            if not get_settings().openai_api_key:
+            if not await self._openai.resolve_optional(company_id=company_id):
                 return
-            facts = await self._fact_extractor.extract(conversation_text)
+            facts = await self._fact_extractor.extract(company_id=company_id, conversation_text=conversation_text)
             if not facts:
                 return
-            embeddings = await self._embeddings.embed([f.text for f in facts])
+            embeddings = await self._embeddings.embed(company_id=company_id, texts=[f.text for f in facts])
             for fact, vec in zip(facts, embeddings, strict=False):
                 if not vec:
                     continue

@@ -1,13 +1,13 @@
 import { Injectable } from "@nestjs/common";
 
 import { NotFoundError, ValidationError } from "@wolfgang/contracts";
+import { encryptJson } from "@wolfgang/crypto";
 
 import type { CompanyResponseDto } from "../dto/company-response.dto";
 import type { CreateCompanyDto } from "../dto/create-company.dto";
 import type { ListCompaniesDto } from "../dto/list-companies.dto";
 import type { UpdateCompanyDto } from "../dto/update-company.dto";
 import { CompaniesRepository } from "../repository/companies.repository";
-import { SchemaProvisionerService } from "./schema-provisioner.service";
 
 function slugify(input: string): string {
   const normalized = input
@@ -30,7 +30,6 @@ function slugify(input: string): string {
 export class CompaniesService {
   constructor(
     private readonly repo: CompaniesRepository,
-    private readonly provisioner: SchemaProvisionerService,
   ) {}
 
   async list(query: ListCompaniesDto) {
@@ -65,33 +64,50 @@ export class CompaniesService {
     }
 
     const baseSlug = slugify(dto.name);
-    let slug = baseSlug;
-    if (await this.repo.existsBySlug(slug)) {
-      const suffix = Date.now().toString(36);
-      const maxBase = Math.max(1, 48 - (suffix.length + 1));
-      slug = `${baseSlug.slice(0, maxBase)}_${suffix}`;
-      if (await this.repo.existsBySlug(slug)) {
-        throw new ValidationError("Company slug already exists");
+    const document = dto.document?.trim() || undefined;
+
+    const integrations =
+      dto.integrations?.map((i) => {
+        if (i.mode === "global" && !i.credential_set_id) {
+          throw new ValidationError("credential_set_id is required when mode=global", { provider: i.provider });
+        }
+        if (i.mode === "custom") {
+          if (!i.secrets_override || Object.keys(i.secrets_override).length === 0) {
+            throw new ValidationError("secrets_override is required when mode=custom", { provider: i.provider });
+          }
+        }
+
+        return {
+          provider: i.provider,
+          mode: i.mode,
+          credential_set_id: i.credential_set_id,
+          config_override: i.config_override ?? {},
+          secrets_override_enc: i.mode === "custom" ? encryptJson(i.secrets_override ?? {}) : "",
+        };
+      }) ?? undefined;
+
+    const suffix = Date.now().toString(36);
+    const maxBase = Math.max(1, 48 - (suffix.length + 1));
+    const attempts: string[] = [baseSlug, `${baseSlug.slice(0, maxBase)}_${suffix}`];
+
+    let lastError: unknown = null;
+    for (const slug of attempts) {
+      try {
+        const { company, schema_name } = await this.repo.createCompanyFull({
+          name: dto.name.trim(),
+          slug,
+          document,
+          settings: dto.settings ?? {},
+          owner_user_id: ownerUserId,
+          integrations,
+        });
+        return this.toResponse(company, schema_name);
+      } catch (err) {
+        lastError = err;
       }
     }
 
-    const company = await this.repo.createCompany({
-      name: dto.name.trim(),
-      slug,
-      document: dto.document?.trim(),
-      settings: dto.settings ?? {},
-      owner_user_id: ownerUserId,
-    });
-
-    try {
-      await this.repo.ensureDefaultCenturionConfig(company.id);
-      const schemaName = await this.provisioner.provisionSchema(slug);
-      await this.repo.upsertCompanyCrm(company.id, schemaName);
-      return this.toResponse(company, schemaName);
-    } catch (err) {
-      await this.repo.deleteCompany(company.id);
-      throw err;
-    }
+    throw lastError instanceof Error ? lastError : new ValidationError("Failed to create company", { error: lastError });
   }
 
   async getById(id: string) {

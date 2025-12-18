@@ -9,18 +9,32 @@ from openai import AsyncOpenAI
 
 from common.config.settings import get_settings
 from common.infrastructure.cache.redis_client import RedisClient
+from common.infrastructure.database.supabase_client import SupabaseDb
+from common.infrastructure.integrations.openai_resolver import OpenAIResolver
 
 logger = logging.getLogger(__name__)
 
 
 class EmbeddingService:
-    def __init__(self, *, redis: RedisClient | None = None):
+    def __init__(self, *, db: SupabaseDb | None = None, redis: RedisClient | None = None):
         self._redis = redis
+        self._openai = OpenAIResolver(db) if db else None
 
-    async def embed(self, texts: list[str]) -> list[list[float]]:
-        settings = get_settings()
-        if not settings.openai_api_key:
-            raise RuntimeError("OPENAI_API_KEY is required for embeddings")
+    async def embed(self, *, company_id: str, texts: list[str]) -> list[list[float]]:
+        if self._openai:
+            resolved = await self._openai.resolve_optional(company_id=company_id)
+            if not resolved:
+                raise RuntimeError("OpenAI integration not configured for embeddings")
+            api_key = resolved.api_key
+            base_url = resolved.base_url
+            model = resolved.embedding_model
+        else:
+            settings = get_settings()
+            if not settings.openai_api_key:
+                raise RuntimeError("OPENAI_API_KEY is required for embeddings")
+            api_key = settings.openai_api_key
+            base_url = settings.openai_base_url
+            model = settings.openai_embedding_model
 
         cached: dict[int, list[float]] = {}
         missing: list[tuple[int, str]] = []
@@ -31,7 +45,7 @@ class EmbeddingService:
                 cached[idx] = []
                 continue
 
-            key = self._cache_key(text_norm)
+            key = self._cache_key(company_id=company_id, model=model, text=text_norm)
             if self._redis:
                 raw = await self._redis.get(key)
                 if raw:
@@ -46,14 +60,14 @@ class EmbeddingService:
             missing.append((idx, text_norm))
 
         if missing:
-            client = AsyncOpenAI(api_key=settings.openai_api_key, base_url=settings.openai_base_url)
+            client = AsyncOpenAI(api_key=api_key, base_url=base_url)
             inputs = [t for _, t in missing]
-            res = await client.embeddings.create(model=settings.openai_embedding_model, input=inputs)
+            res = await client.embeddings.create(model=model, input=inputs)
             for (idx, text), item in zip(missing, res.data, strict=False):
                 vec = list(item.embedding)
                 cached[idx] = vec
                 if self._redis:
-                    await self._redis.set(self._cache_key(text), json.dumps(vec), ttl_s=7 * 24 * 3600)
+                    await self._redis.set(self._cache_key(company_id=company_id, model=model, text=text), json.dumps(vec), ttl_s=7 * 24 * 3600)
 
         ordered: list[list[float]] = []
         for idx in range(len(texts)):
@@ -62,11 +76,10 @@ class EmbeddingService:
         logger.info("embeddings.generated", extra={"extra": {"count": len(texts), "missing": len(missing)}})
         return ordered
 
-    def _cache_key(self, text: str) -> str:
+    def _cache_key(self, *, company_id: str, model: str, text: str) -> str:
         h = hashlib.sha256(text.encode("utf-8")).hexdigest()
-        return f"emb:{h}"
+        return f"emb:{company_id}:{model}:{h}"
 
 
 def format_vector(vec: list[float]) -> str:
     return "[" + ",".join(f"{v:.8f}" for v in vec) + "]"
-

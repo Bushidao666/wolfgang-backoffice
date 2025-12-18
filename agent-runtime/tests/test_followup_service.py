@@ -138,8 +138,12 @@ async def test_handle_sends_followup_and_reschedules_when_more_attempts(monkeypa
         status="processing",
     )
 
-    # Force deterministic base message (no OpenAI key)
-    monkeypatch.setattr("modules.followups.services.followup_service.get_settings", lambda: type("S", (), {"openai_api_key": None})())
+    # Force deterministic base message (no OpenAI configured)
+    class _NoOpenAI:
+        async def resolve_optional(self, *, company_id: str):  # noqa: ARG002
+            return None
+
+    service._openai = _NoOpenAI()  # type: ignore[attr-defined]
 
     await service._handle(item)  # noqa: SLF001
 
@@ -150,4 +154,3 @@ async def test_handle_sends_followup_and_reschedules_when_more_attempts(monkeypa
     assert msg_repo.saved[0]["content"] == "Oi"
     assert repo.scheduled == [("r1", 2)]
     assert len(db.executed) >= 2
-

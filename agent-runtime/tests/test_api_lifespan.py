@@ -84,6 +84,7 @@ async def test_lifespan_initializes_and_closes_resources(monkeypatch):
         log_level="INFO",
         disable_connections=False,
         disable_workers=True,
+        connection_timeout_s=0.1,
         supabase_db_url="postgres://example",
         db_pool_min=1,
         db_pool_max=2,

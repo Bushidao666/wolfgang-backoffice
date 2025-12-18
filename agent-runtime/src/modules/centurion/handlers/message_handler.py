@@ -35,8 +35,8 @@ class MessageHandler:
         self._followups = FollowupService(db=db, redis=redis)
 
         self._downloader = MediaDownloader()
-        self._stt = SpeechToTextService()
-        self._vision = VisionService()
+        self._stt = SpeechToTextService(db=db)
+        self._vision = VisionService(db=db)
         self._channel_router = ChannelRouter()
 
     async def handle_message_received(self, raw: str) -> None:
@@ -109,6 +109,7 @@ class MessageHandler:
         enriched_text = inbound_content or ""
         if media_url:
             enriched_text = await self._process_media(
+                company_id=company_id,
                 message_id=message_id,
                 content_type=content_type,
                 media_url=media_url,
@@ -153,6 +154,7 @@ class MessageHandler:
     async def _process_media(
         self,
         *,
+        company_id: str,
         message_id: str,
         content_type: str,
         media_url: str,
@@ -169,7 +171,7 @@ class MessageHandler:
 
         if content_type == "audio" and can_process_audio:
             try:
-                transcription = await self._stt.transcribe(audio_bytes=data)
+                transcription = await self._stt.transcribe(company_id=company_id, audio_bytes=data)
                 await self._msg_repo.set_media_enrichment(message_id=message_id, audio_transcription=transcription)
                 return transcription
             except Exception:
@@ -178,7 +180,7 @@ class MessageHandler:
 
         if content_type == "image" and can_process_image:
             try:
-                description = await self._vision.describe(image_bytes=data, mime_type=ct)
+                description = await self._vision.describe(company_id=company_id, image_bytes=data, mime_type=ct)
                 await self._msg_repo.set_media_enrichment(message_id=message_id, image_description=description)
                 return description
             except Exception:

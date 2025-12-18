@@ -1,14 +1,16 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 
 import { RedisService } from "../../../infrastructure/redis/redis.service";
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
+import { decryptV1, encryptV1 } from "@wolfgang/crypto";
 import { ChannelType, CreateInstanceDto } from "../dto/create-instance.dto";
 import type { ChannelInstanceState } from "../dto/instance-response.dto";
+import type { InstanceResponseDto } from "../dto/instance-response.dto";
 import { InstagramService } from "../channels/instagram.service";
 import { TelegramService } from "../channels/telegram.service";
 import { EvolutionApiService } from "./evolution-api.service";
 
-type DbChannelInstance = {
+type DbChannelInstanceRow = {
   id: string;
   company_id: string;
   channel_type: ChannelType;
@@ -19,9 +21,12 @@ type DbChannelInstance = {
   last_connected_at: string | null;
   last_disconnected_at: string | null;
   error_message: string | null;
-  telegram_bot_token?: string | null;
+  telegram_bot_token: string | null;
+  telegram_bot_token_enc: string | null;
   instagram_account_id?: string | null;
 };
+
+type DbChannelInstanceWithSecrets = DbChannelInstanceRow & { telegram_bot_token_resolved: string | null };
 
 function mapState(state: string): ChannelInstanceState {
   const normalized = state.toLowerCase();
@@ -46,57 +51,77 @@ export class InstancesService {
     return this.supabase.getAdminClient();
   }
 
-  async list(companyId: string): Promise<DbChannelInstance[]> {
+  async list(companyId: string): Promise<InstanceResponseDto[]> {
     const { data, error } = await this.admin
       .schema("core")
       .from("channel_instances")
-      .select("*")
+      .select("id, company_id, channel_type, instance_name, state, phone_number, profile_name, last_connected_at, last_disconnected_at, error_message")
       .eq("company_id", companyId)
       .order("created_at", { ascending: false });
     if (error) throw new BadRequestException(error.message);
-    return (data ?? []) as DbChannelInstance[];
+    return ((data ?? []) as unknown as DbChannelInstanceRow[]).map((row) => this.toResponse(row));
   }
 
-  async getById(instanceId: string): Promise<DbChannelInstance> {
+  async getById(instanceId: string): Promise<InstanceResponseDto> {
     const { data, error } = await this.admin
       .schema("core")
       .from("channel_instances")
-      .select("*")
+      .select("id, company_id, channel_type, instance_name, state, phone_number, profile_name, last_connected_at, last_disconnected_at, error_message")
       .eq("id", instanceId)
       .maybeSingle();
     if (error) throw new BadRequestException(error.message);
     if (!data) throw new NotFoundException("Instance not found");
-    return data as DbChannelInstance;
+    return this.toResponse(data as unknown as DbChannelInstanceRow);
   }
 
-  async getByName(instanceName: string): Promise<DbChannelInstance | null> {
+  async getByName(instanceName: string): Promise<Pick<DbChannelInstanceRow, "id" | "company_id" | "channel_type" | "instance_name"> | null> {
     const { data, error } = await this.admin
       .schema("core")
       .from("channel_instances")
-      .select("*")
+      .select("id, company_id, channel_type, instance_name")
       .eq("instance_name", instanceName)
       .maybeSingle();
     if (error) throw new BadRequestException(error.message);
-    return (data ?? null) as DbChannelInstance | null;
+    return (data ?? null) as Pick<DbChannelInstanceRow, "id" | "company_id" | "channel_type" | "instance_name"> | null;
   }
 
-  async create(dto: CreateInstanceDto): Promise<DbChannelInstance> {
+  async getByIdWithSecrets(instanceId: string): Promise<DbChannelInstanceWithSecrets> {
+    const { data, error } = await this.admin
+      .schema("core")
+      .from("channel_instances")
+      .select("id, company_id, channel_type, instance_name, state, phone_number, profile_name, last_connected_at, last_disconnected_at, error_message, telegram_bot_token, telegram_bot_token_enc, instagram_account_id")
+      .eq("id", instanceId)
+      .maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+    if (!data) throw new NotFoundException("Instance not found");
+
+    const row = data as unknown as DbChannelInstanceRow;
+    return { ...row, telegram_bot_token_resolved: this.resolveTelegramToken(row) };
+  }
+
+  async create(dto: CreateInstanceDto): Promise<InstanceResponseDto> {
     if (dto.channel_type === ChannelType.Telegram && !dto.telegram_bot_token) {
       throw new BadRequestException("telegram_bot_token is required for Telegram instances");
     }
 
     if (dto.channel_type === ChannelType.Whatsapp) {
-      await this.evolution.createInstance(dto.instance_name);
+      await this.evolution.createInstance(dto.company_id, dto.instance_name);
     } else if (dto.channel_type === ChannelType.Instagram) {
-      await this.instagram.createInstance(dto.instance_name);
+      await this.instagram.createInstance(dto.company_id, dto.instance_name);
     }
+
+    const telegramBotTokenEnc =
+      dto.channel_type === ChannelType.Telegram && dto.telegram_bot_token
+        ? this.encryptTelegramToken(dto.telegram_bot_token)
+        : null;
 
     const payload: Record<string, unknown> = {
       company_id: dto.company_id,
       channel_type: dto.channel_type,
       instance_name: dto.instance_name,
       state: "disconnected",
-      telegram_bot_token: dto.telegram_bot_token ?? null,
+      telegram_bot_token: null,
+      telegram_bot_token_enc: telegramBotTokenEnc,
       instagram_account_id: dto.instagram_account_id ?? null,
     };
 
@@ -104,20 +129,20 @@ export class InstancesService {
       .schema("core")
       .from("channel_instances")
       .insert(payload)
-      .select("*")
+      .select("id, company_id, channel_type, instance_name, state, phone_number, profile_name, last_connected_at, last_disconnected_at, error_message")
       .single();
     if (error) throw new BadRequestException(error.message);
-    return data as DbChannelInstance;
+    return this.toResponse(data as unknown as DbChannelInstanceRow);
   }
 
   async delete(instanceId: string): Promise<void> {
-    const instance = await this.getById(instanceId);
+    const instance = await this.getByIdWithSecrets(instanceId);
     if (instance.channel_type === ChannelType.Whatsapp) {
-      await this.evolution.deleteInstance(instance.instance_name);
+      await this.evolution.deleteInstance(instance.company_id, instance.instance_name);
     } else if (instance.channel_type === ChannelType.Instagram) {
-      await this.instagram.deleteInstance(instance.instance_name);
-    } else if (instance.channel_type === ChannelType.Telegram && instance.telegram_bot_token) {
-      await this.telegram.deleteWebhook(instance.telegram_bot_token);
+      await this.instagram.deleteInstance(instance.company_id, instance.instance_name);
+    } else if (instance.channel_type === ChannelType.Telegram && instance.telegram_bot_token_resolved) {
+      await this.telegram.deleteWebhook(instance.telegram_bot_token_resolved);
     }
 
     const { error } = await this.admin.schema("core").from("channel_instances").delete().eq("id", instanceId);
@@ -126,18 +151,18 @@ export class InstancesService {
   }
 
   async connect(instanceId: string): Promise<{ qrcode: string | null }> {
-    const instance = await this.getById(instanceId);
+    const instance = await this.getByIdWithSecrets(instanceId);
     if (instance.channel_type === ChannelType.Telegram) {
-      if (!instance.telegram_bot_token) throw new BadRequestException("telegram_bot_token is missing for instance");
-      await this.telegram.setWebhook(instance.telegram_bot_token, instance.id);
+      if (!instance.telegram_bot_token_resolved) throw new BadRequestException("telegram_bot_token is missing for instance");
+      await this.telegram.setWebhook(instance.telegram_bot_token_resolved, instance.id);
       await this.updateState(instanceId, "connected", { provider: "telegram", webhook_configured: true });
       return { qrcode: null };
     }
 
     const { qrcode } =
       instance.channel_type === ChannelType.Instagram
-        ? await this.instagram.connect(instance.instance_name)
-        : await this.evolution.connect(instance.instance_name);
+        ? await this.instagram.connect(instance.company_id, instance.instance_name)
+        : await this.evolution.connect(instance.company_id, instance.instance_name);
     if (qrcode) {
       await this.cacheQrCode(instanceId, qrcode);
     }
@@ -150,18 +175,18 @@ export class InstancesService {
   }
 
   async disconnect(instanceId: string): Promise<void> {
-    const instance = await this.getById(instanceId);
+    const instance = await this.getByIdWithSecrets(instanceId);
     if (instance.channel_type === ChannelType.Telegram) {
-      if (!instance.telegram_bot_token) throw new BadRequestException("telegram_bot_token is missing for instance");
-      await this.telegram.deleteWebhook(instance.telegram_bot_token);
+      if (!instance.telegram_bot_token_resolved) throw new BadRequestException("telegram_bot_token is missing for instance");
+      await this.telegram.deleteWebhook(instance.telegram_bot_token_resolved);
       await this.updateState(instanceId, "disconnected", { provider: "telegram", webhook_configured: false });
       return;
     }
 
     if (instance.channel_type === ChannelType.Instagram) {
-      await this.instagram.disconnect(instance.instance_name);
+      await this.instagram.disconnect(instance.company_id, instance.instance_name);
     } else {
-      await this.evolution.disconnect(instance.instance_name);
+      await this.evolution.disconnect(instance.company_id, instance.instance_name);
     }
     await this.updateState(instanceId, "disconnected");
   }
@@ -170,13 +195,13 @@ export class InstancesService {
     const cached = await this.redis.get(this.qrKey(instanceId));
     if (cached) return cached;
 
-    const instance = await this.getById(instanceId);
+    const instance = await this.getByIdWithSecrets(instanceId);
     if (![ChannelType.Whatsapp, ChannelType.Instagram].includes(instance.channel_type)) return null;
 
     const { qrcode } =
       instance.channel_type === ChannelType.Instagram
-        ? await this.instagram.getQrCode(instance.instance_name)
-        : await this.evolution.getQrCode(instance.instance_name);
+        ? await this.instagram.getQrCode(instance.company_id, instance.instance_name)
+        : await this.evolution.getQrCode(instance.company_id, instance.instance_name);
     if (qrcode) {
       await this.cacheQrCode(instanceId, qrcode);
       await this.updateState(instanceId, "qr_ready", { qrcode_present: true });
@@ -184,22 +209,20 @@ export class InstancesService {
     return qrcode;
   }
 
-  async refreshStatus(instanceId: string): Promise<DbChannelInstance> {
-    const instance = await this.getById(instanceId);
+  async refreshStatus(instanceId: string): Promise<InstanceResponseDto> {
+    const instance = await this.getByIdWithSecrets(instanceId);
     if (instance.channel_type === ChannelType.Telegram) {
-      if (!instance.telegram_bot_token) return instance;
-      const info = await this.telegram.getWebhookInfo(instance.telegram_bot_token);
+      if (!instance.telegram_bot_token_resolved) return this.getById(instanceId);
+      const info = await this.telegram.getWebhookInfo(instance.telegram_bot_token_resolved);
       const state = info.url ? "connected" : "disconnected";
       await this.updateState(instanceId, state, { provider: "telegram", webhook_url: info.url, pending_update_count: info.pending_update_count });
       return this.getById(instanceId);
     }
 
-    if (instance.channel_type !== ChannelType.Whatsapp && instance.channel_type !== ChannelType.Instagram) return instance;
-
     const status =
       instance.channel_type === ChannelType.Instagram
-        ? await this.instagram.getStatus(instance.instance_name)
-        : await this.evolution.getStatus(instance.instance_name);
+        ? await this.instagram.getStatus(instance.company_id, instance.instance_name)
+        : await this.evolution.getStatus(instance.company_id, instance.instance_name);
     const mapped = mapState(status.state);
 
     await this.updateState(instanceId, mapped, { provider_state: status.state, provider: status.raw });
@@ -207,21 +230,21 @@ export class InstancesService {
   }
 
   async sendTestMessage(instanceId: string, to: string, text: string): Promise<void> {
-    const instance = await this.getById(instanceId);
+    const instance = await this.getByIdWithSecrets(instanceId);
 
     if (instance.channel_type === ChannelType.Whatsapp) {
-      await this.evolution.sendText(instance.instance_name, to, text);
+      await this.evolution.sendText(instance.company_id, instance.instance_name, to, text);
       return;
     }
 
     if (instance.channel_type === ChannelType.Telegram) {
-      if (!instance.telegram_bot_token) throw new BadRequestException("telegram_bot_token is missing for instance");
-      await this.telegram.sendText(instance.telegram_bot_token, to, text);
+      if (!instance.telegram_bot_token_resolved) throw new BadRequestException("telegram_bot_token is missing for instance");
+      await this.telegram.sendText(instance.telegram_bot_token_resolved, to, text);
       return;
     }
 
     if (instance.channel_type === ChannelType.Instagram) {
-      await this.instagram.sendText(instance.instance_name, to, text);
+      await this.instagram.sendText(instance.company_id, instance.instance_name, to, text);
     }
   }
 
@@ -238,7 +261,7 @@ export class InstancesService {
     providerState: string,
     details: Record<string, unknown>,
     qrcode?: string,
-  ): Promise<DbChannelInstance> {
+  ): Promise<InstanceResponseDto> {
     const mapped = qrcode ? "qr_ready" : mapState(providerState);
     if (qrcode) await this.cacheQrCode(instanceId, qrcode);
     await this.updateState(instanceId, mapped, { provider_state: providerState, provider: details, qrcode_present: !!qrcode });
@@ -253,5 +276,39 @@ export class InstancesService {
 
     const { error } = await this.admin.schema("core").from("channel_instances").update(patch).eq("id", instanceId);
     if (error) throw new BadRequestException(error.message);
+  }
+
+  private toResponse(row: DbChannelInstanceRow): InstanceResponseDto {
+    return {
+      id: row.id,
+      company_id: row.company_id,
+      channel_type: row.channel_type,
+      instance_name: row.instance_name,
+      state: row.state,
+      phone_number: row.phone_number ?? null,
+      profile_name: row.profile_name ?? null,
+      last_connected_at: row.last_connected_at ?? null,
+      last_disconnected_at: row.last_disconnected_at ?? null,
+      error_message: row.error_message ?? null,
+    };
+  }
+
+  private resolveTelegramToken(instance: Pick<DbChannelInstanceRow, "telegram_bot_token" | "telegram_bot_token_enc">): string | null {
+    const raw = (instance.telegram_bot_token_enc ?? instance.telegram_bot_token ?? "").trim();
+    if (!raw) return null;
+    try {
+      const token = decryptV1(raw).trim();
+      return token ? token : null;
+    } catch (err) {
+      throw new ServiceUnavailableException("APP_ENCRYPTION_KEY_CURRENT (or APP_ENCRYPTION_KEY) is required to decrypt Telegram tokens");
+    }
+  }
+
+  private encryptTelegramToken(token: string): string {
+    try {
+      return encryptV1(token.trim());
+    } catch {
+      throw new ServiceUnavailableException("APP_ENCRYPTION_KEY_CURRENT (or APP_ENCRYPTION_KEY) is required to store Telegram tokens securely");
+    }
   }
 }

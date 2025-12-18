@@ -23,12 +23,18 @@ type CreateAutentiqueContractRequest = {
 @Injectable()
 export class AutentiqueServiceClient {
   private readonly baseUrl: string;
+  private readonly internalToken?: string;
 
   constructor(private readonly configService: ConfigService) {
     const cfg = this.configService.get<ServicesConfig>("services");
     this.baseUrl = normalizeHttpUrl(
       cfg?.autentiqueServiceUrl ?? process.env.AUTENTIQUE_SERVICE_URL ?? "http://127.0.0.1:4002",
     );
+    this.internalToken =
+      cfg?.autentiqueServiceInternalToken?.trim() ||
+      process.env.AUTENTIQUE_SERVICE_INTERNAL_TOKEN?.trim() ||
+      process.env.INTERNAL_API_TOKEN?.trim() ||
+      undefined;
   }
 
   async createContract(payload: CreateAutentiqueContractRequest, opts?: { requestId?: string; correlationId?: string }) {
@@ -40,6 +46,7 @@ export class AutentiqueServiceClient {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(this.internalToken ? { "x-internal-token": this.internalToken } : {}),
           ...(opts?.requestId ? { "x-request-id": opts.requestId } : {}),
           ...(opts?.correlationId ? { "x-correlation-id": opts.correlationId } : {}),
         },

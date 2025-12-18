@@ -26,6 +26,7 @@ import { McpModule } from "./modules/mcp/mcp.module";
 import { MarketingModule } from "./modules/marketing/marketing.module";
 import { MetricsModule } from "./modules/metrics/metrics.module";
 import { ToolsModule } from "./modules/tools/tools.module";
+import { IntegrationsModule } from "./modules/integrations/integrations.module";
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ToolsModule } from "./modules/tools/tools.module";
     MarketingModule,
     MetricsModule,
     ToolsModule,
+    IntegrationsModule,
     HealthModule,
   ],
   providers: [

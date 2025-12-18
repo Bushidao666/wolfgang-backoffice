@@ -5,9 +5,9 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from common.config.settings import get_settings
 from common.infrastructure.cache.redis_client import RedisClient
 from common.infrastructure.database.supabase_client import SupabaseDb
+from common.infrastructure.integrations.openai_resolver import OpenAIResolver
 from modules.centurion.domain.message import Message as DomainMessage
 from modules.centurion.repository.config_repository import ConfigRepository
 from modules.centurion.repository.conversation_repository import ConversationRepository
@@ -37,6 +37,7 @@ class FollowupService:
         self._short_term = ShortTermMemory(db=db, redis=redis)
         self._rag = RagAdapter(db=db, redis=redis)
         self._kb = KnowledgeBaseAdapter(db=db, redis=redis)
+        self._openai = OpenAIResolver(db)
 
     async def cancel_pending(self, *, company_id: str, lead_id: str) -> int:
         return await self._repo.cancel_pending_for_lead(company_id=company_id, lead_id=lead_id)
@@ -208,8 +209,8 @@ class FollowupService:
         template: str,
     ) -> str:
         base = template.strip()
-        settings = get_settings()
-        if not settings.openai_api_key:
+        resolved = await self._openai.resolve_optional(company_id=company_id)
+        if not resolved:
             return base
 
         config = await self._config_repo.get_centurion_config(company_id=company_id, centurion_id=centurion_id)
@@ -219,7 +220,7 @@ class FollowupService:
         rag_items: list[dict[str, Any]] = []
         kb_items: list[dict[str, Any]] = []
         try:
-            rag_items = await self._rag.get_relevant_context(lead_id=lead_id, query=query, top_k=5)
+            rag_items = await self._rag.get_relevant_context(company_id=company_id, lead_id=lead_id, query=query, top_k=5)
         except Exception:
             logger.exception("followup.rag_failed")
         try:
@@ -253,9 +254,9 @@ class FollowupService:
 
         agent = Agent(
             model=OpenAIChat(
-                id=settings.openai_chat_model,
-                api_key=settings.openai_api_key,
-                base_url=settings.openai_base_url,
+                id=resolved.chat_model,
+                api_key=resolved.api_key,
+                base_url=resolved.base_url,
                 temperature=0.3,
                 timeout=30.0,
             ),

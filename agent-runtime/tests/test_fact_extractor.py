@@ -6,8 +6,8 @@ from modules.memory.services.fact_extractor import FactExtractor
 @pytest.mark.asyncio
 async def test_extract_fallback_returns_empty_for_blank():
     extractor = FactExtractor()
-    assert await extractor.extract("") == []
-    assert await extractor.extract("   \n") == []
+    assert await extractor.extract(company_id="c1", conversation_text="") == []
+    assert await extractor.extract(company_id="c1", conversation_text="   \n") == []
 
 
 @pytest.mark.asyncio
@@ -21,7 +21,7 @@ async def test_extract_fallback_parses_common_fields_and_dedupes():
         "Data 12/12/2025."
     )
 
-    facts = await extractor.extract(text)
+    facts = await extractor.extract(company_id="c1", conversation_text=text)
     texts = [f.text for f in facts]
 
     assert any(t.startswith("Email informado:") for t in texts)
@@ -64,7 +64,7 @@ async def test_extract_uses_openai_when_api_key_is_set(monkeypatch):
     monkeypatch.setattr("modules.memory.services.fact_extractor.AsyncOpenAI", _FakeOpenAI)
 
     extractor = FactExtractor()
-    facts = await extractor.extract("conversa")
+    facts = await extractor.extract(company_id="c1", conversation_text="conversa")
 
     assert len(facts) == 1
     assert facts[0].category == "preference"
@@ -102,5 +102,5 @@ async def test_extract_falls_back_when_openai_returns_invalid_json(monkeypatch):
     monkeypatch.setattr("modules.memory.services.fact_extractor.AsyncOpenAI", _FakeOpenAI)
 
     extractor = FactExtractor()
-    facts = await extractor.extract("email test@example.com")
+    facts = await extractor.extract(company_id="c1", conversation_text="email test@example.com")
     assert any("Email informado" in f.text for f in facts)

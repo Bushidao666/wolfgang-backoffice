@@ -8,6 +8,7 @@ export type McpServerRow = {
   server_url: string;
   auth_type: string | null;
   auth_config: Record<string, unknown> | null;
+  has_auth_secrets?: boolean;
   tools_available: unknown[] | null;
   last_tools_sync_at: string | null;
   is_active: boolean | null;
@@ -45,4 +46,3 @@ export async function deleteMcpServer(companyId: string, centurionId: string, se
     headers: { "x-company-id": companyId },
   });
 }
-

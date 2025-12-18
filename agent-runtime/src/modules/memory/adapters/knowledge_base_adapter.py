@@ -10,7 +10,7 @@ from modules.memory.services.embedding_service import EmbeddingService, format_v
 class KnowledgeBaseAdapter:
     def __init__(self, *, db: SupabaseDb, redis: RedisClient | None = None):
         self._db = db
-        self._embeddings = EmbeddingService(redis=redis)
+        self._embeddings = EmbeddingService(db=db, redis=redis)
 
     async def search_knowledge(
         self,
@@ -20,7 +20,7 @@ class KnowledgeBaseAdapter:
         top_k: int = 5,
         max_distance: float = 0.35,
     ) -> list[dict[str, Any]]:
-        vecs = await self._embeddings.embed([query])
+        vecs = await self._embeddings.embed(company_id=company_id, texts=[query])
         if not vecs or not vecs[0]:
             return []
 
@@ -49,4 +49,3 @@ class KnowledgeBaseAdapter:
             top_k,
         )
         return [dict(r) for r in rows]
-

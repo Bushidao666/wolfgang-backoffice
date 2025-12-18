@@ -1,7 +1,10 @@
 import { Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
+import { resolveCompanyIntegration } from "@wolfgang/integrations";
+
 import type { EvolutionConfig } from "../../../config/evolution.config";
+import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
 
 type EvolutionResponse<T> = T & Record<string, unknown>;
 
@@ -11,7 +14,10 @@ function withTrailingSlash(url: string) {
 
 @Injectable()
 export class EvolutionApiService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly supabase: SupabaseService,
+  ) {}
 
   private get cfg(): EvolutionConfig {
     return (this.configService.get<EvolutionConfig>("evolution") ?? {
@@ -21,16 +27,37 @@ export class EvolutionApiService {
     }) satisfies EvolutionConfig;
   }
 
-  private async request<T>(
-    method: "GET" | "POST" | "DELETE",
-    path: string,
-    body?: unknown,
-  ): Promise<EvolutionResponse<T>> {
+  private admin() {
+    return this.supabase.getAdminClient();
+  }
+
+  private async resolveCredentials(companyId: string): Promise<{ apiUrl: string; apiKey: string }> {
+    try {
+      const resolved = await resolveCompanyIntegration({ supabaseAdmin: this.admin(), companyId, provider: "evolution" });
+      if (resolved) {
+        const apiKey = typeof resolved.secrets["api_key"] === "string" ? String(resolved.secrets["api_key"]) : "";
+        const apiUrl = typeof resolved.config["api_url"] === "string" ? String(resolved.config["api_url"]) : "";
+        if (apiKey && apiUrl) return { apiUrl, apiKey };
+      }
+    } catch {
+      // fall back to env
+    }
+
     const apiUrl = this.cfg.apiUrl?.trim();
     const apiKey = this.cfg.apiKey?.trim();
     if (!apiUrl || !apiKey) {
       throw new ServiceUnavailableException("Evolution API not configured (EVOLUTION_API_URL / EVOLUTION_API_KEY)");
     }
+    return { apiUrl, apiKey };
+  }
+
+  private async request<T>(
+    companyId: string,
+    method: "GET" | "POST" | "DELETE",
+    path: string,
+    body?: unknown,
+  ): Promise<EvolutionResponse<T>> {
+    const { apiUrl, apiKey } = await this.resolveCredentials(companyId);
 
     const url = `${withTrailingSlash(apiUrl)}${path.startsWith("/") ? "" : "/"}${path}`;
     const res = await fetch(url, {
@@ -53,42 +80,42 @@ export class EvolutionApiService {
     return json;
   }
 
-  async createInstance(instanceName: string): Promise<{ instanceName: string }> {
-    await this.request("POST", "/instance/create", {
+  async createInstance(companyId: string, instanceName: string): Promise<{ instanceName: string }> {
+    await this.request(companyId, "POST", "/instance/create", {
       instanceName,
       instance_name: instanceName,
     });
     return { instanceName };
   }
 
-  async deleteInstance(instanceName: string): Promise<void> {
-    await this.request("DELETE", `/instance/delete/${encodeURIComponent(instanceName)}`);
+  async deleteInstance(companyId: string, instanceName: string): Promise<void> {
+    await this.request(companyId, "DELETE", `/instance/delete/${encodeURIComponent(instanceName)}`);
   }
 
-  async connect(instanceName: string): Promise<{ qrcode: string | null }> {
-    const data = await this.request<Record<string, unknown>>("POST", `/instance/connect/${encodeURIComponent(instanceName)}`);
+  async connect(companyId: string, instanceName: string): Promise<{ qrcode: string | null }> {
+    const data = await this.request<Record<string, unknown>>(companyId, "POST", `/instance/connect/${encodeURIComponent(instanceName)}`);
     const qrcode = (data["qrcode"] as string | undefined) ?? (data["base64"] as string | undefined) ?? null;
     return { qrcode };
   }
 
-  async disconnect(instanceName: string): Promise<void> {
-    await this.request("DELETE", `/instance/logout/${encodeURIComponent(instanceName)}`);
+  async disconnect(companyId: string, instanceName: string): Promise<void> {
+    await this.request(companyId, "DELETE", `/instance/logout/${encodeURIComponent(instanceName)}`);
   }
 
-  async getStatus(instanceName: string): Promise<{ state: string; raw: Record<string, unknown> }> {
-    const data = await this.request<Record<string, unknown>>("GET", `/instance/connectionState/${encodeURIComponent(instanceName)}`);
+  async getStatus(companyId: string, instanceName: string): Promise<{ state: string; raw: Record<string, unknown> }> {
+    const data = await this.request<Record<string, unknown>>(companyId, "GET", `/instance/connectionState/${encodeURIComponent(instanceName)}`);
     const state = String((data["state"] as string | undefined) ?? (data["instance"] as string | undefined) ?? "unknown");
     return { state, raw: data };
   }
 
-  async getQrCode(instanceName: string): Promise<{ qrcode: string | null; raw: Record<string, unknown> }> {
-    const data = await this.request<Record<string, unknown>>("GET", `/instance/connect/${encodeURIComponent(instanceName)}`);
+  async getQrCode(companyId: string, instanceName: string): Promise<{ qrcode: string | null; raw: Record<string, unknown> }> {
+    const data = await this.request<Record<string, unknown>>(companyId, "GET", `/instance/connect/${encodeURIComponent(instanceName)}`);
     const qrcode = (data["qrcode"] as string | undefined) ?? (data["base64"] as string | undefined) ?? null;
     return { qrcode, raw: data };
   }
 
-  async sendText(instanceName: string, to: string, text: string): Promise<{ messageId?: string }> {
-    const data = await this.request<Record<string, unknown>>("POST", `/message/sendText/${encodeURIComponent(instanceName)}`, {
+  async sendText(companyId: string, instanceName: string, to: string, text: string): Promise<{ messageId?: string }> {
+    const data = await this.request<Record<string, unknown>>(companyId, "POST", `/message/sendText/${encodeURIComponent(instanceName)}`, {
       number: to,
       to,
       text,
@@ -100,6 +127,7 @@ export class EvolutionApiService {
   }
 
   async sendMedia(
+    companyId: string,
     instanceName: string,
     to: string,
     mediaUrl: string,
@@ -107,6 +135,7 @@ export class EvolutionApiService {
     caption?: string,
   ): Promise<{ messageId?: string }> {
     const data = await this.request<Record<string, unknown>>(
+      companyId,
       "POST",
       `/message/sendMedia/${encodeURIComponent(instanceName)}`,
       {
@@ -123,8 +152,9 @@ export class EvolutionApiService {
     return { messageId };
   }
 
-  async sendWhatsAppAudio(instanceName: string, to: string, audioUrl: string): Promise<{ messageId?: string }> {
+  async sendWhatsAppAudio(companyId: string, instanceName: string, to: string, audioUrl: string): Promise<{ messageId?: string }> {
     const data = await this.request<Record<string, unknown>>(
+      companyId,
       "POST",
       `/message/sendWhatsAppAudio/${encodeURIComponent(instanceName)}`,
       {

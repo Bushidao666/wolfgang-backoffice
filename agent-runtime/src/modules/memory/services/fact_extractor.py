@@ -8,22 +8,38 @@ from typing import Any
 from openai import AsyncOpenAI
 
 from common.config.settings import get_settings
+from common.infrastructure.database.supabase_client import SupabaseDb
+from common.infrastructure.integrations.openai_resolver import OpenAIResolver
 from modules.memory.domain.fact import Fact
 
 logger = logging.getLogger(__name__)
 
 
 class FactExtractor:
-    async def extract(self, conversation_text: str) -> list[Fact]:
+    def __init__(self, *, db: SupabaseDb | None = None):
+        self._openai = OpenAIResolver(db) if db else None
+
+    async def extract(self, *, company_id: str, conversation_text: str) -> list[Fact]:
         text = (conversation_text or "").strip()
         if not text:
             return []
 
-        settings = get_settings()
-        if not settings.openai_api_key:
-            return self._fallback_extract(text)
+        if self._openai:
+            resolved = await self._openai.resolve_optional(company_id=company_id)
+            if not resolved:
+                return self._fallback_extract(text)
+            api_key = resolved.api_key
+            base_url = resolved.base_url
+            model = resolved.chat_model
+        else:
+            settings = get_settings()
+            if not settings.openai_api_key:
+                return self._fallback_extract(text)
+            api_key = settings.openai_api_key
+            base_url = settings.openai_base_url
+            model = settings.openai_chat_model
 
-        client = AsyncOpenAI(api_key=settings.openai_api_key, base_url=settings.openai_base_url)
+        client = AsyncOpenAI(api_key=api_key, base_url=base_url)
         system = (
             "Você extrai fatos úteis sobre um lead a partir de uma conversa. "
             "Retorne APENAS JSON (sem markdown) no formato: "
@@ -33,7 +49,7 @@ class FactExtractor:
         user = f"Conversa:\n{text}\n\nExtraia fatos relevantes."
 
         res = await client.chat.completions.create(
-            model=settings.openai_chat_model,
+            model=model,
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
             temperature=0.1,
         )

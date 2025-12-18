@@ -75,19 +75,19 @@ async def test_stt_requires_openai_key(monkeypatch):
 
     svc = SpeechToTextService()
     with pytest.raises(RuntimeError):
-        await svc.transcribe(audio_bytes=b"x")
+        await svc.transcribe(company_id="c1", audio_bytes=b"x")
 
 
 @pytest.mark.asyncio
 async def test_stt_transcribes_via_http(monkeypatch):
-    settings = types.SimpleNamespace(openai_api_key="k")
+    settings = types.SimpleNamespace(openai_api_key="k", openai_base_url="https://example.test", openai_stt_model="whisper-1")
     monkeypatch.setattr("modules.channels.services.stt_service.get_settings", lambda: settings)
 
     fake = _FakeAsyncClient().with_post_response(_FakeResponse(json_data={"text": " ok "}))
     monkeypatch.setattr("modules.channels.services.stt_service.httpx.AsyncClient", lambda *a, **k: fake)  # noqa: ARG005
 
     svc = SpeechToTextService()
-    out = await svc.transcribe(audio_bytes=b"x", filename="a.ogg")
+    out = await svc.transcribe(company_id="c1", audio_bytes=b"x", filename="a.ogg")
     assert out == "ok"
 
 
@@ -98,18 +98,17 @@ async def test_vision_requires_openai_key(monkeypatch):
 
     svc = VisionService()
     with pytest.raises(RuntimeError):
-        await svc.describe(image_bytes=b"x")
+        await svc.describe(company_id="c1", image_bytes=b"x")
 
 
 @pytest.mark.asyncio
 async def test_vision_describes_via_http(monkeypatch):
-    settings = types.SimpleNamespace(openai_api_key="k")
+    settings = types.SimpleNamespace(openai_api_key="k", openai_base_url="https://example.test", openai_vision_model="gpt-4o-mini")
     monkeypatch.setattr("modules.channels.services.vision_service.get_settings", lambda: settings)
 
     fake = _FakeAsyncClient().with_post_response(_FakeResponse(json_data={"choices": [{"message": {"content": " desc "}}]}))
     monkeypatch.setattr("modules.channels.services.vision_service.httpx.AsyncClient", lambda *a, **k: fake)  # noqa: ARG005
 
     svc = VisionService()
-    out = await svc.describe(image_bytes=b"x", mime_type="image/png")
+    out = await svc.describe(company_id="c1", image_bytes=b"x", mime_type="image/png")
     assert out == "desc"
-

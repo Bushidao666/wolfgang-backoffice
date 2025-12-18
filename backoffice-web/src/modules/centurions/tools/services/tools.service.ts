@@ -9,8 +9,10 @@ export type ToolConfigRow = {
   endpoint: string;
   method: string;
   headers: Record<string, unknown> | null;
+  has_headers?: boolean;
   auth_type: string | null;
   auth_config: Record<string, unknown> | null;
+  has_auth_secrets?: boolean;
   input_schema: Record<string, unknown>;
   output_schema: Record<string, unknown> | null;
   timeout_ms: number | null;
@@ -63,4 +65,3 @@ export async function deleteTool(companyId: string, centurionId: string, toolId:
     headers: { "x-company-id": companyId },
   });
 }
-

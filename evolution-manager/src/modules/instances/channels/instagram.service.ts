@@ -10,33 +10,32 @@ function stripPrefix(value: string, prefix: string) {
 export class InstagramService {
   constructor(private readonly evolution: EvolutionApiService) {}
 
-  async createInstance(instanceName: string): Promise<void> {
-    await this.evolution.createInstance(instanceName);
+  async createInstance(companyId: string, instanceName: string): Promise<void> {
+    await this.evolution.createInstance(companyId, instanceName);
   }
 
-  async deleteInstance(instanceName: string): Promise<void> {
-    await this.evolution.deleteInstance(instanceName);
+  async deleteInstance(companyId: string, instanceName: string): Promise<void> {
+    await this.evolution.deleteInstance(companyId, instanceName);
   }
 
-  async connect(instanceName: string): Promise<{ qrcode: string | null }> {
-    return this.evolution.connect(instanceName);
+  async connect(companyId: string, instanceName: string): Promise<{ qrcode: string | null }> {
+    return this.evolution.connect(companyId, instanceName);
   }
 
-  async disconnect(instanceName: string): Promise<void> {
-    await this.evolution.disconnect(instanceName);
+  async disconnect(companyId: string, instanceName: string): Promise<void> {
+    await this.evolution.disconnect(companyId, instanceName);
   }
 
-  async getStatus(instanceName: string): Promise<{ state: string; raw: Record<string, unknown> }> {
-    return this.evolution.getStatus(instanceName);
+  async getStatus(companyId: string, instanceName: string): Promise<{ state: string; raw: Record<string, unknown> }> {
+    return this.evolution.getStatus(companyId, instanceName);
   }
 
-  async getQrCode(instanceName: string): Promise<{ qrcode: string | null; raw: Record<string, unknown> }> {
-    return this.evolution.getQrCode(instanceName);
+  async getQrCode(companyId: string, instanceName: string): Promise<{ qrcode: string | null; raw: Record<string, unknown> }> {
+    return this.evolution.getQrCode(companyId, instanceName);
   }
 
-  async sendText(instanceName: string, to: string, text: string): Promise<void> {
+  async sendText(companyId: string, instanceName: string, to: string, text: string): Promise<void> {
     const recipient = stripPrefix(to, "instagram:");
-    await this.evolution.sendText(instanceName, recipient, text);
+    await this.evolution.sendText(companyId, instanceName, recipient, text);
   }
 }
-

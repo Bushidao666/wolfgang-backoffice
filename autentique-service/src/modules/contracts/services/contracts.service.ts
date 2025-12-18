@@ -13,6 +13,7 @@ import { RedisChannels } from "@wolfgang/contracts";
 import { buildContractCreatedEvent } from "../events/contract-created.event";
 import { CreateContractDto } from "../dto/create-contract.dto";
 import { ContractsQueryDto } from "../dto/contracts-query.dto";
+import { AutentiqueIntegrationService } from "./autentique-integration.service";
 
 type TemplateRow = {
   id: string;
@@ -54,6 +55,7 @@ export class ContractsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly autentique: AutentiqueClient,
+    private readonly integrations: AutentiqueIntegrationService,
     private readonly events: EventBusService,
     private readonly logger: LoggerService,
   ) {}
@@ -94,16 +96,23 @@ export class ContractsService {
       context,
     });
 
+    const creds = await this.integrations.resolveForCompany(companyId);
+    const autentiqueCredentials = { api_key: creds.api_key, base_url: creds.base_url };
+
     const docTitle = `${template.name || "Contrato"}${deal?.deal_full_name ? ` - ${String(deal.deal_full_name)}` : ""}`;
-    const created = await this.autentique.createDocument({
+    const created = await this.autentique.createDocument(autentiqueCredentials, {
       document: { name: docTitle },
       signers: [signer],
       file: { filename, contentType, buffer },
+      organization_id: creds.organization_id,
+      folder_id: creds.folder_id,
     });
 
     const signatureLink =
       created.signature_short_link ??
-      (created.signature_public_id ? await this.autentique.createSignatureLink(created.signature_public_id) : undefined);
+      (created.signature_public_id
+        ? await this.autentique.createSignatureLink(autentiqueCredentials, created.signature_public_id)
+        : undefined);
 
     const dealValueRaw = deal?.deal_valor_contrato;
     const inferredValue = dealValueRaw === null || dealValueRaw === undefined ? undefined : Number(dealValueRaw);
@@ -133,6 +142,7 @@ export class ContractsService {
         status: "sent",
         contract_url: signatureLink ?? null,
         autentique_id: created.document_id,
+        autentique_credential_set_id: creds.credential_set_id ?? null,
         contract_data: contractData,
         value: contractValue ?? null,
       })

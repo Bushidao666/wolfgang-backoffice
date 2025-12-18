@@ -26,13 +26,13 @@ export class TelegramWebhooksController {
       throw new UnauthorizedException("Invalid Telegram webhook secret");
     }
 
-    const instance = await this.instances.getById(instanceId);
-    if (instance.channel_type !== "telegram" || !instance.telegram_bot_token) return;
+    const instance = await this.instances.getByIdWithSecrets(instanceId);
+    if (instance.channel_type !== "telegram" || !instance.telegram_bot_token_resolved) return;
 
     if (!body || typeof body !== "object") return;
 
     const normalized = await this.telegram.normalizeInbound({
-      token: instance.telegram_bot_token,
+      token: instance.telegram_bot_token_resolved,
       update: body as Record<string, unknown>,
     });
     if (!normalized) return;
@@ -51,4 +51,3 @@ export class TelegramWebhooksController {
     );
   }
 }
-

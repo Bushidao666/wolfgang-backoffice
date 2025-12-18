@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Headers, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Headers, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 
+import { InternalTokenGuard } from "../../../common/guards/internal-token.guard";
 import { CreateContractDto } from "../dto/create-contract.dto";
 import { ContractsQueryDto } from "../dto/contracts-query.dto";
 import { ContractResponseDto } from "../dto/contract-response.dto";
@@ -9,6 +10,7 @@ import { ContractsService } from "../services/contracts.service";
 @ApiTags("Contracts")
 @ApiBearerAuth()
 @Controller("contracts")
+@UseGuards(InternalTokenGuard)
 export class ContractsController {
   constructor(private readonly contracts: ContractsService) {}
 

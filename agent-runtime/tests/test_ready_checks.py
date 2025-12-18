@@ -35,7 +35,7 @@ class _RedisFail:
 def test_ready_returns_ok_when_connections_disabled():
     app = FastAPI()
     app.include_router(health_router)
-    app.state.disable_connections = True
+    app.state.connection_mode = "disabled"
 
     client = TestClient(app)
     resp = client.get("/ready")
@@ -95,4 +95,3 @@ def test_ready_returns_degraded_when_db_or_redis_fails():
     assert body["ready"] is False
     assert body["checks"]["db"] == "failed"
     assert body["checks"]["redis"] == "failed"
-

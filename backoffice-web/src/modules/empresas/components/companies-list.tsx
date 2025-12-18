@@ -9,8 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CompanyModal } from "@/modules/empresas/components/company-modal";
+import { CompanyIntegrationsModal } from "@/modules/empresas/components/company-integrations-modal";
+import { CreateCompanyWizardModal } from "@/modules/empresas/components/create-company-wizard-modal";
+import { CompanyUsersModal } from "@/modules/empresas/components/company-users-modal";
 import { useCompanies } from "@/modules/empresas/hooks/use-companies";
-import { createCompany, updateCompany, type Company } from "@/modules/empresas/services/companies.service";
+import { updateCompany, type Company } from "@/modules/empresas/services/companies.service";
 
 export function CompaniesList() {
   const queryClient = useQueryClient();
@@ -19,8 +22,11 @@ export function CompaniesList() {
   const [q, setQ] = React.useState("");
   const [draftQ, setDraftQ] = React.useState("");
 
-  const [modalOpen, setModalOpen] = React.useState(false);
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const [editOpen, setEditOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Company | null>(null);
+  const [usersCompany, setUsersCompany] = React.useState<Company | null>(null);
+  const [integrationsCompany, setIntegrationsCompany] = React.useState<Company | null>(null);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useCompanies({
     page,
@@ -63,8 +69,7 @@ export function CompaniesList() {
             </Button>
             <Button
               onClick={() => {
-                setEditing(null);
-                setModalOpen(true);
+                setCreateOpen(true);
               }}
             >
               <Plus className="h-4 w-4" />
@@ -108,16 +113,24 @@ export function CompaniesList() {
                         <TableCell>{company.status}</TableCell>
                         <TableCell className="text-muted-foreground">{company.schema_name}</TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setEditing(company);
-                              setModalOpen(true);
-                            }}
-                          >
-                            Editar
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditing(company);
+                                setEditOpen(true);
+                              }}
+                            >
+                              Editar
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setIntegrationsCompany(company)}>
+                              Integrações
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setUsersCompany(company)}>
+                              Usuários
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -148,20 +161,43 @@ export function CompaniesList() {
         ) : null}
       </CardContent>
 
-      <CompanyModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        initial={editing}
-        onSubmit={async (values) => {
-          if (editing) {
-            await updateCompany(editing.id, values);
-          } else {
-            await createCompany(values);
-          }
+      <CreateCompanyWizardModal
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={async () => {
           await queryClient.invalidateQueries({ queryKey: ["companies"] });
         }}
+      />
+
+      <CompanyModal
+        open={editOpen}
+        onOpenChange={(open) => {
+          setEditOpen(open);
+          if (!open) setEditing(null);
+        }}
+        initial={editing}
+        onSubmit={async (values) => {
+          if (!editing) return;
+          await updateCompany(editing.id, values);
+          await queryClient.invalidateQueries({ queryKey: ["companies"] });
+        }}
+      />
+
+      <CompanyIntegrationsModal
+        open={!!integrationsCompany}
+        onOpenChange={(open) => {
+          if (!open) setIntegrationsCompany(null);
+        }}
+        company={integrationsCompany}
+      />
+
+      <CompanyUsersModal
+        open={!!usersCompany}
+        onOpenChange={(open) => {
+          if (!open) setUsersCompany(null);
+        }}
+        company={usersCompany}
       />
     </Card>
   );
 }
-
