@@ -38,13 +38,7 @@ function resolveCompany(payload: JwtPayload): string | undefined {
 
 @WebSocketGateway({
   cors: {
-    origin: (() => {
-      const origins = (process.env.CORS_ORIGIN ?? "")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      return origins.length > 0 ? origins : true;
-    })(),
+    origin: true,
     credentials: true,
   },
   path: "/ws",

@@ -14,9 +14,10 @@ async function bootstrap() {
 
   app.use(helmet());
 
-  const corsOrigin = process.env.CORS_ORIGIN;
   app.enableCors({
-    origin: corsOrigin ? corsOrigin.split(",").map((s) => s.trim()) : true,
+    // Allow any origin (Railway + multiple frontends) and let CORS middleware reply to preflights.
+    // With credentials=true we cannot use "*" so we reflect the Origin header.
+    origin: true,
     credentials: true,
   });
 
