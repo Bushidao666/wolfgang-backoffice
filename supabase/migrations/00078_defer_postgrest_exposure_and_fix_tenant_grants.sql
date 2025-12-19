@@ -20,11 +20,11 @@ security definer
 set search_path = core, public
 as $$
 declare
-  schema_name text;
+  v_schema_name text;
 begin
-  schema_name := core.fn_sanitize_schema_name(p_schema);
+  v_schema_name := core.fn_sanitize_schema_name(p_schema);
   insert into core.postgrest_schema_exposure_queue(schema_name)
-  values (schema_name)
+  values (v_schema_name)
   on conflict (schema_name) do nothing;
 end;
 $$;
@@ -225,4 +225,3 @@ begin
     perform core.fn_enqueue_postgrest_schema_exposure(r.schema_name);
   end loop;
 end $$;
-
