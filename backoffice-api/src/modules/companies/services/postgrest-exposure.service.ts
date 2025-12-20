@@ -12,7 +12,7 @@ export class PostgrestExposureService implements OnModuleInit {
     // Best-effort drain for schemas enqueued by migrations/provisioning.
     // Do not crash the service if Postgres isn't configured yet.
     try {
-      await this.drainQueue(200);
+      await this.drain({ limit: 200 });
     } catch (err) {
       this.logger.warn("Falha ao drenar fila de exposição de schemas do PostgREST", {
         error: err instanceof Error ? err.message : String(err),
@@ -24,7 +24,7 @@ export class PostgrestExposureService implements OnModuleInit {
     // Smoke test: ensures we have a working direct Postgres connection and that the helper
     // function exists and can run in this environment.
     await this.exposeSchema("core");
-    await this.drainQueue(200);
+    await this.drain({ limit: 200 });
   }
 
   async exposeSchema(schemaName: string): Promise<void> {
@@ -48,18 +48,28 @@ export class PostgrestExposureService implements OnModuleInit {
     }
   }
 
-  private async drainQueue(limit = 200): Promise<void> {
+  async drain({ limit = 200 }: { limit?: number } = {}): Promise<{ drained: number; remaining: number }> {
     const { rows } = await this.pg.query<{ schema_name: string }>(
       "select schema_name from core.postgrest_schema_exposure_queue order by created_at asc limit $1",
       [limit],
     );
 
+    let drained = 0;
     for (const row of rows ?? []) {
       const schemaName = String(row.schema_name ?? "").trim();
       if (!schemaName) continue;
 
       await this.pg.query("select core.fn_postgrest_expose_schema($1)", [schemaName]);
       await this.pg.query("delete from core.postgrest_schema_exposure_queue where schema_name = $1", [schemaName]);
+      drained += 1;
     }
+
+    const { rows: remainingRows } = await this.pg.query<{ count: string }>(
+      "select count(*)::text as count from core.postgrest_schema_exposure_queue",
+      [],
+    );
+
+    const remaining = Number(remainingRows?.[0]?.count ?? "0") || 0;
+    return { drained, remaining };
   }
 }

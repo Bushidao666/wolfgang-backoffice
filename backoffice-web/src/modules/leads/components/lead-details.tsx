@@ -6,6 +6,7 @@ import { type InfiniteData, useInfiniteQuery, useQuery } from "@tanstack/react-q
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { QualificationExplainability } from "@/modules/leads/components/qualification-explainability";
 import { LeadTimeline } from "@/modules/leads/components/lead-timeline";
 import { getLead, getLeadTimeline } from "@/modules/leads/services/leads.service";
 
@@ -92,6 +93,8 @@ export function LeadDetails({ companyId, leadId }: { companyId: string; leadId: 
           ) : null}
         </CardContent>
       </Card>
+
+      <QualificationExplainability companyId={companyId} leadId={leadId} />
 
       <Card>
         <CardHeader>

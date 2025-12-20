@@ -1,5 +1,6 @@
 import json
 import types
+from datetime import datetime, timezone
 
 import pytest
 
@@ -56,21 +57,25 @@ class _ConfigRepo:
 class _ConvRepo:
     def __init__(self, conversation: Conversation):
         self.conversation = conversation
-        self.updated: list[dict] = []
+        self.appended: list[dict] = []
         self.created_calls: list[dict] = []
 
     async def get_or_create(self, **kwargs):
         self.created_calls.append(kwargs)
         return self.conversation
 
-    async def update_debounce(self, **kwargs):
-        self.updated.append(kwargs)
+    async def append_pending_message(self, **kwargs):
+        self.appended.append(kwargs)
+        return len(self.appended)
 
 
 class _MsgRepo:
     def __init__(self):
         self.saved: list[dict] = []
         self.enriched: list[dict] = []
+
+    async def exists_channel_message_id(self, **kwargs):  # noqa: ARG002
+        return False
 
     async def save_message(self, **kwargs):
         self.saved.append(kwargs)
@@ -87,12 +92,20 @@ class _ShortTerm:
     async def invalidate_cache(self, conversation_id: str):
         self.invalidated.append(conversation_id)
 
+class _Idempotency:
+    async def claim(self, **kwargs):  # noqa: ARG002
+        return True
+
+    async def release(self, **kwargs):  # noqa: ARG002
+        return None
+
 
 @pytest.mark.asyncio
 async def test_handle_message_received_happy_path(monkeypatch):
     db = _Db()
     redis = _Redis()
     handler = MessageHandler(db=db, redis=redis)  # type: ignore[arg-type]
+    handler._idempotency = _Idempotency()  # type: ignore[attr-defined]
 
     lead = Lead(id="l1", company_id="co1", phone="+55119999", centurion_id="ct1")
     handler._lead_repo = _LeadRepo(lead=lead, created=True)  # type: ignore[attr-defined]
@@ -111,23 +124,16 @@ async def test_handle_message_received_happy_path(monkeypatch):
     handler._msg_repo = _MsgRepo()  # type: ignore[attr-defined]
     handler._short_term = _ShortTerm()  # type: ignore[attr-defined]
 
-    published = {"lead_created": False, "debounce_timer": False}
-
-    async def fake_publish_lead_created(*args, **kwargs):  # noqa: ARG001
-        published["lead_created"] = True
-
-    async def fake_publish_debounce_timer(*args, **kwargs):  # noqa: ARG001
-        published["debounce_timer"] = True
-
-    monkeypatch.setattr(handler, "_publish_lead_created", fake_publish_lead_created)
-    monkeypatch.setattr(handler, "_publish_debounce_timer", fake_publish_debounce_timer)
-
     event = {
-        "id": "evt1",
+        "id": "evt123456",
         "type": "message.received",
+        "version": 1,
+        "occurred_at": datetime.now(timezone.utc).isoformat(),
         "company_id": "co1",
+        "source": "evolution-manager",
         "payload": {"instance_id": "inst1", "from": "+55119999", "body": "oi", "raw": {"message_id": "m"}},
-        "correlation_id": "corr1",
+        "correlation_id": "corr12345",
+        "causation_id": None,
     }
 
     await handler.handle_message_received(json.dumps(event))
@@ -136,14 +142,15 @@ async def test_handle_message_received_happy_path(monkeypatch):
     assert handler._followups.canceled == [("co1", "l1")]  # type: ignore[attr-defined]
     assert handler._msg_repo.saved[0]["content"] == "oi"  # type: ignore[attr-defined]
     assert handler._short_term.invalidated == ["conv1"]  # type: ignore[attr-defined]
-    assert published == {"lead_created": True, "debounce_timer": True}
-    assert handler._conv_repo.updated  # type: ignore[attr-defined]
-    assert handler._conv_repo.updated[0]["pending_messages"] == ["oi"]  # type: ignore[attr-defined]
+    assert [c for c, _ in redis.published] == ["lead.created", "debounce.timer"]
+    assert handler._conv_repo.appended  # type: ignore[attr-defined]
+    assert handler._conv_repo.appended[0]["message"] == "oi"  # type: ignore[attr-defined]
 
 
 @pytest.mark.asyncio
 async def test_handle_message_received_ignores_invalid_payload():
     handler = MessageHandler(db=_Db(), redis=_Redis())  # type: ignore[arg-type]
+    handler._idempotency = _Idempotency()  # type: ignore[attr-defined]
 
     # invalid json
     await handler.handle_message_received("{bad")
@@ -157,6 +164,7 @@ async def test_handle_message_received_processes_audio_media(monkeypatch):
     db = _Db()
     redis = _Redis()
     handler = MessageHandler(db=db, redis=redis)  # type: ignore[arg-type]
+    handler._idempotency = _Idempotency()  # type: ignore[attr-defined]
 
     lead = Lead(id="l1", company_id="co1", phone="+55119999", centurion_id="ct1")
     handler._lead_repo = _LeadRepo(lead=lead, created=False)  # type: ignore[attr-defined]
@@ -175,11 +183,6 @@ async def test_handle_message_received_processes_audio_media(monkeypatch):
     handler._msg_repo = _MsgRepo()  # type: ignore[attr-defined]
     handler._short_term = _ShortTerm()  # type: ignore[attr-defined]
 
-    async def noop(*args, **kwargs):  # noqa: ARG001
-        return None
-
-    monkeypatch.setattr(handler, "_publish_debounce_timer", noop)
-
     async def download(url: str):
         assert url == "http://example.test/a"
         return b"audio", "audio/ogg"
@@ -193,9 +196,14 @@ async def test_handle_message_received_processes_audio_media(monkeypatch):
     handler._stt = types.SimpleNamespace(transcribe=transcribe)  # type: ignore[attr-defined]
 
     event = {
-        "id": "evt1",
+        "id": "evt123456",
         "type": "message.received",
+        "version": 1,
+        "occurred_at": datetime.now(timezone.utc).isoformat(),
         "company_id": "co1",
+        "source": "evolution-manager",
+        "correlation_id": "corr12345",
+        "causation_id": None,
         "payload": {
             "instance_id": "inst1",
             "from": "+55119999",
@@ -207,4 +215,4 @@ async def test_handle_message_received_processes_audio_media(monkeypatch):
 
     await handler.handle_message_received(json.dumps(event))
     assert handler._msg_repo.enriched  # type: ignore[attr-defined]
-    assert handler._conv_repo.updated[0]["pending_messages"] == ["transcribed"]  # type: ignore[attr-defined]
+    assert handler._conv_repo.appended[0]["message"] == "transcribed"  # type: ignore[attr-defined]

@@ -64,8 +64,13 @@ class ToolRegistry:
         fn_name = _sanitize_tool_name(tool.tool_name)
 
         async def _entrypoint(**kwargs: Any):
-            result = await self._executor.execute_http(tool, params=kwargs)
-            return {"ok": result.ok, "status_code": result.status_code, "body": result.body}
+            try:
+                result = await self._executor.execute_http(tool, params=kwargs)
+                return {"ok": result.ok, "status_code": result.status_code, "body": result.body}
+            except Exception as err:
+                # Tool failures should not crash the whole run; return a structured error.
+                details = getattr(err, "details", None)
+                return {"ok": False, "status_code": 0, "error": str(err), "details": details}
 
         return Function(
             name=fn_name,
@@ -74,4 +79,3 @@ class ToolRegistry:
             entrypoint=_entrypoint,
             show_result=False,
         )
-

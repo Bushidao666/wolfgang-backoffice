@@ -10,6 +10,15 @@ import type { CenturionResponseDto } from "../dto/centurion-response.dto";
 export class CenturionsService {
   constructor(private readonly supabase: SupabaseService) {}
 
+  private toJsonObject(value: unknown): Record<string, unknown> {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    try {
+      return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
+    } catch {
+      return {};
+    }
+  }
+
   private admin() {
     return this.supabase.getAdminClient();
   }
@@ -47,8 +56,8 @@ export class CenturionsService {
         name: dto.name,
         slug: dto.slug,
         prompt: dto.prompt,
-        personality: dto.personality ?? {},
-        qualification_rules: dto.qualification_rules ?? {},
+        personality: this.toJsonObject(dto.personality ?? {}),
+        qualification_rules: this.toJsonObject(dto.qualification_rules ?? {}),
         can_send_audio: dto.can_send_audio ?? true,
         can_send_image: dto.can_send_image ?? true,
         can_send_video: dto.can_send_video ?? true,
@@ -71,8 +80,8 @@ export class CenturionsService {
     if (dto.name !== undefined) patch.name = dto.name;
     if (dto.slug !== undefined) patch.slug = dto.slug;
     if (dto.prompt !== undefined) patch.prompt = dto.prompt;
-    if (dto.personality !== undefined) patch.personality = dto.personality ?? {};
-    if (dto.qualification_rules !== undefined) patch.qualification_rules = dto.qualification_rules ?? {};
+    if (dto.personality !== undefined) patch.personality = this.toJsonObject(dto.personality ?? {});
+    if (dto.qualification_rules !== undefined) patch.qualification_rules = this.toJsonObject(dto.qualification_rules ?? {});
 
     for (const key of [
       "can_send_audio",
@@ -113,4 +122,3 @@ export class CenturionsService {
     if (error) throw new ValidationError("Failed to delete centurion", { error });
   }
 }
-

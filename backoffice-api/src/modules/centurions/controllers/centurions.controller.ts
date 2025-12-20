@@ -6,13 +6,14 @@ import { UserRole } from "../../../common/enums/user-role.enum";
 import { CompanyGuard } from "../../../common/guards/company.guard";
 import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../../../common/guards/roles.guard";
+import { HoldingRoleGuard } from "../../auth/guards/holding-role.guard";
 import { CreateCenturionDto, UpdateCenturionDto } from "../dto/create-centurion.dto";
 import { CenturionResponseDto } from "../dto/centurion-response.dto";
 import { CenturionsService } from "../services/centurions.service";
 
 @ApiTags("Centurions")
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard, CompanyGuard)
+@UseGuards(JwtAuthGuard, HoldingRoleGuard, RolesGuard, CompanyGuard)
 @Controller("centurions")
 export class CenturionsController {
   constructor(private readonly centurions: CenturionsService) {}
@@ -53,4 +54,3 @@ export class CenturionsController {
     return { ok: true };
   }
 }
-

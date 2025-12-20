@@ -1157,7 +1157,7 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
 
 **Tasks:**
 
-- [ ] **[TASK-4.1]** Structured Output para qualificação e plano de mídia (Pydantic)
+- [x] **[TASK-4.1]** Structured Output para qualificação e plano de mídia (Pydantic)
   ```
   📁 Arquivos:
      • Criar: agent-runtime/src/modules/centurion/agno_models/qualification_models.py (~220 linhas)
@@ -1175,7 +1175,7 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
      • Model outputs são persistidos de forma compatível com DB
   ```
 
-- [ ] **[TASK-4.2]** Memory/Storage/Summaries do Agno alinhados a conversation_id
+- [x] **[TASK-4.2]** Memory/Storage/Summaries do Agno alinhados a conversation_id
   ```
   📁 Arquivos:
      • Criar: agent-runtime/src/common/infrastructure/agno/storage.py (~220 linhas)
@@ -1194,7 +1194,7 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
      • Summaries reduzem contexto sem quebrar coerência do atendimento
   ```
 
-- [ ] **[TASK-4.3]** Tool Hooks globais (segurança + logging + auditoria)
+- [x] **[TASK-4.3]** Tool Hooks globais (segurança + logging + auditoria)
   ```
   📁 Arquivos:
      • Criar: agent-runtime/src/modules/tools/agno_hooks/security_hooks.py (~220 linhas)
@@ -1214,7 +1214,7 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
      • Auditoria não grava secrets
   ```
 
-- [ ] **[TASK-4.4]** Bridge de MCP (DB → MCPTools) com cleanup e error handling
+- [x] **[TASK-4.4]** Bridge de MCP (DB → MCPTools) com cleanup e error handling
   ```
   📁 Arquivos:
      • Criar: agent-runtime/src/modules/tools/services/agno_mcp_bridge.py (~240 linhas)
@@ -1232,10 +1232,10 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
   ```
 
 **✅ CHECKPOINT FASE 4:**
-- [ ] Decisões críticas em structured output (qualificação/plano de mídia/tools)
-- [ ] Memory/Storage/Summaries alinhados ao core
-- [ ] Tool hooks globais aplicados (segurança/log/audit)
-- [ ] MCP funcionando via MCPTools com cleanup
+- [x] Decisões críticas em structured output (qualificação/plano de mídia/tools)
+- [x] Memory/Storage/Summaries alinhados ao core
+- [x] Tool hooks globais aplicados (segurança/log/audit)
+- [x] MCP funcionando via MCPTools com cleanup
 
 ---
 
@@ -1246,7 +1246,7 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
 
 **Tasks:**
 
-- [ ] **[TASK-5.1]** UI/API para critérios custom + pesos + threshold por Centurion
+- [x] **[TASK-5.1]** UI/API para critérios custom + pesos + threshold por Centurion
   ```
   📁 Arquivos:
      • Criar: backoffice-api/src/modules/centurions/dto/qualification-rules.dto.ts (~180 linhas)
@@ -1264,7 +1264,7 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
      • API valida schema e retorna erros por campo
   ```
 
-- [ ] **[TASK-5.2]** Engine híbrida + histórico append-only de avaliações
+- [x] **[TASK-5.2]** Engine híbrida + histórico append-only de avaliações
   ```
   📁 Arquivos:
      • Criar: agent-runtime/src/modules/centurion/qualification/criteria_engine.py (~280 linhas)
@@ -1284,7 +1284,7 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
      • Score por critério soma corretamente conforme pesos
   ```
 
-- [ ] **[TASK-5.3]** Media Tools completo (DB + API + UI + tool no runtime + envio)
+- [x] **[TASK-5.3]** Media Tools completo (DB + API + UI + tool no runtime + envio)
   ```
   📁 Arquivos:
      • Criar: supabase/migrations/00082_media_assets.sql (~320 linhas)
@@ -1308,9 +1308,9 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
   ```
 
 **✅ CHECKPOINT FASE 5:**
-- [ ] Critérios/pesos configuráveis e persistidos por Centurion
-- [ ] Explainability disponível no backoffice
-- [ ] Media Tools completo e integrado ao envio de mensagens
+- [x] Critérios/pesos configuráveis e persistidos por Centurion
+- [x] Explainability disponível no backoffice
+- [x] Media Tools completo e integrado ao envio de mensagens
 
 ---
 
@@ -1321,7 +1321,7 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
 
 **Tasks:**
 
-- [ ] **[TASK-6.1]** Contrato canônico de canal + router único
+- [x] **[TASK-6.1]** Contrato canônico de canal + router único
   ```
   📁 Arquivos:
      • Criar: agent-runtime/src/modules/channels/contracts/events.py (~200 linhas)
@@ -1338,7 +1338,7 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
      • Capabilities por canal respeitadas (texto/mídia)
   ```
 
-- [ ] **[TASK-6.2]** Completar adapters IG/TG e documentação de contrato
+- [x] **[TASK-6.2]** Completar adapters IG/TG e documentação de contrato
   ```
   📁 Arquivos:
      • Modificar: agent-runtime/src/modules/channels/adapters/instagram_adapter.py (~200 linhas)
@@ -1356,8 +1356,8 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
   ```
 
 **✅ CHECKPOINT FASE 6:**
-- [ ] Contrato canônico documentado e implementado
-- [ ] IG/TG operando com o mesmo pipeline do WhatsApp
+- [x] Contrato canônico documentado e implementado
+- [x] IG/TG operando com o mesmo pipeline do WhatsApp
 
 ---
 
@@ -1368,7 +1368,7 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
 
 **Tasks:**
 
-- [ ] **[TASK-7.1]** Implementar egress policy + payload limits (tools + mídia)
+- [x] **[TASK-7.1]** Implementar egress policy + payload limits (tools + mídia)
   ```
   📁 Arquivos:
      • Criar: agent-runtime/src/common/security/egress_policy.py (~220 linhas)
@@ -1388,7 +1388,7 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
      • Limites impedem downloads gigantes e tool calls custosas
   ```
 
-- [ ] **[TASK-7.2]** Criar runbooks executáveis (incidentes previsíveis)
+- [x] **[TASK-7.2]** Criar runbooks executáveis (incidentes previsíveis)
   ```
   📁 Arquivos:
      • Criar: docs/runbooks/runbook-schema-exposure.md (~220 linhas)
@@ -1407,7 +1407,7 @@ Este documento é a versão **aprofundada e expandida** do `BACKLOG_VNEXT_AGNO.m
   ```
 
 **✅ CHECKPOINT FASE 7:**
-- [ ] Tool calls e downloads com políticas de egress e limites
+- [x] Tool calls e downloads com políticas de egress e limites
 - [ ] Runbooks prontos e testados em staging (simulação de falhas)
 
 ---

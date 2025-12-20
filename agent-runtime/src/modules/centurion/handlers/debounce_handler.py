@@ -6,6 +6,7 @@ import logging
 from common.config.settings import get_settings
 from common.infrastructure.cache.redis_client import RedisClient
 from common.infrastructure.database.supabase_client import SupabaseDb
+from common.infrastructure.locks.redis_lock import RedisLockManager
 from modules.centurion.repository.conversation_repository import ConversationRepository
 from modules.centurion.services.centurion_service import CenturionService
 
@@ -18,6 +19,7 @@ class DebounceWorker:
         self._redis = redis
         self._conversations = ConversationRepository(db)
         self._centurion = CenturionService(db=db, redis=redis)
+        self._locks = RedisLockManager(redis, prefix="locks:conversation:")
 
     async def run_forever(self) -> None:
         settings = get_settings()
@@ -29,9 +31,16 @@ class DebounceWorker:
             await asyncio.sleep(settings.debounce_poll_interval_s)
 
     async def _tick(self) -> None:
+        settings = get_settings()
         due = await self._conversations.find_due_conversations(limit=20)
         if not due:
             return
         for conv in due:
-            await self._centurion.process_due_conversation(conv.id, causation_id=conv.id)
-
+            async with self._locks.hold(
+                conv.id,
+                ttl_s=settings.debounce_lock_ttl_s,
+                refresh_every_s=settings.debounce_lock_refresh_s,
+            ) as acquired:
+                if not acquired:
+                    continue
+                await self._centurion.process_due_conversation(conv.id)

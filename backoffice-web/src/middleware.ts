@@ -1,11 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { normalizeBaseUrl } from "@/lib/url";
+import { getJwtRole, isHoldingRole } from "@/modules/auth/rbac";
 
 const ACCESS_COOKIE = "bo_access_token";
 const REFRESH_COOKIE = "bo_refresh_token";
 
-const PUBLIC_PATHS = new Set(["/login", "/forgot-password", "/reset-password", "/api/health", "/api/runtime-config"]);
+const PUBLIC_PATHS = new Set([
+  "/login",
+  "/forgot-password",
+  "/reset-password",
+  "/unauthorized",
+  "/api/health",
+  "/api/runtime-config",
+]);
 
 function isPublic(pathname: string) {
   if (PUBLIC_PATHS.has(pathname)) return true;
@@ -61,6 +69,12 @@ export async function middleware(req: NextRequest) {
     if (pathname === "/login") {
       const token = req.cookies.get(ACCESS_COOKIE)?.value;
       if (token && !isExpired(token)) {
+        const role = getJwtRole(token);
+        if (!isHoldingRole(role)) {
+          const url = req.nextUrl.clone();
+          url.pathname = "/unauthorized";
+          return NextResponse.redirect(url);
+        }
         const url = req.nextUrl.clone();
         url.pathname = "/empresas";
         return NextResponse.redirect(url);
@@ -78,6 +92,15 @@ export async function middleware(req: NextRequest) {
   }
 
   if (!isExpired(accessToken)) {
+    const role = getJwtRole(accessToken);
+    if (!isHoldingRole(role)) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/unauthorized";
+      const response = NextResponse.redirect(url);
+      response.cookies.set(ACCESS_COOKIE, "", { path: "/", sameSite: "lax", maxAge: 0 });
+      response.cookies.set(REFRESH_COOKIE, "", { path: "/", sameSite: "lax", maxAge: 0 });
+      return response;
+    }
     return NextResponse.next();
   }
 
@@ -86,6 +109,16 @@ export async function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
+  }
+
+  const refreshedRole = getJwtRole(refreshed.access_token);
+  if (!isHoldingRole(refreshedRole)) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/unauthorized";
+    const response = NextResponse.redirect(url);
+    response.cookies.set(ACCESS_COOKIE, "", { path: "/", sameSite: "lax", maxAge: 0 });
+    response.cookies.set(REFRESH_COOKIE, "", { path: "/", sameSite: "lax", maxAge: 0 });
+    return response;
   }
 
   const response = NextResponse.next();

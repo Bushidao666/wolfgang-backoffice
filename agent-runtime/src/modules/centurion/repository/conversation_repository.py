@@ -60,7 +60,9 @@ class ConversationRepository:
         until: datetime | None,
         pending_messages: list[str],
         last_inbound_at: datetime | None,
+        metadata_patch: dict[str, Any] | None = None,
     ) -> None:
+        patch = metadata_patch or {}
         await self._db.execute(
             """
             update core.conversations
@@ -69,6 +71,7 @@ class ConversationRepository:
               debounce_until=$3,
               pending_messages=$4::jsonb,
               last_inbound_at=coalesce($5, last_inbound_at),
+              metadata=coalesce(metadata, '{}'::jsonb) || coalesce($6::jsonb, '{}'::jsonb),
               updated_at=now()
             where id=$1
             """,
@@ -77,7 +80,43 @@ class ConversationRepository:
             until,
             pending_messages,
             last_inbound_at,
+            patch,
         )
+
+    async def append_pending_message(
+        self,
+        *,
+        conversation_id: str,
+        message: str,
+        debounce_until: datetime,
+        last_inbound_at: datetime,
+        metadata_patch: dict[str, Any] | None = None,
+    ) -> int:
+        """
+        Atomically appends a message to pending_messages and moves the conversation to `waiting`.
+        Returns the new pending_count.
+        """
+        patch = metadata_patch or {}
+        row = await self._db.fetchrow(
+            """
+            update core.conversations
+            set
+              debounce_state='waiting',
+              debounce_until=$2,
+              pending_messages=coalesce(pending_messages, '[]'::jsonb) || to_jsonb(array[$3]::text[]),
+              last_inbound_at=$4,
+              metadata=coalesce(metadata, '{}'::jsonb) || coalesce($5::jsonb, '{}'::jsonb),
+              updated_at=now()
+            where id=$1
+            returning jsonb_array_length(pending_messages) as pending_count
+            """,
+            conversation_id,
+            debounce_until,
+            message,
+            last_inbound_at,
+            patch,
+        )
+        return int(row["pending_count"]) if row and row.get("pending_count") is not None else 0
 
     async def mark_processing(self, conversation_id: str) -> None:
         await self._db.execute(
@@ -125,4 +164,3 @@ class ConversationRepository:
             last_outbound_at=row.get("last_outbound_at"),
             metadata=dict(row.get("metadata") or {}),
         )
-

@@ -67,7 +67,7 @@ begin
       'default',
       'Você é um SDR educado e objetivo. Faça perguntas para entender a necessidade do lead, coletar data, local e orçamento quando aplicável, e conduzir para o próximo passo.',
       jsonb_build_object('tone', 'friendly', 'language', 'pt-BR'),
-      jsonb_build_object('required_fields', jsonb_build_array('nome','data','local','orcamento'), 'min_score', 0.7),
+      jsonb_build_object('required_fields', jsonb_build_array('budget','date','location'), 'threshold', 1.0),
       true,
       1500,
       3000,
@@ -142,4 +142,3 @@ grant execute on function core.fn_create_company_full(text, text, text, uuid, js
 
 -- Down (manual):
 -- drop function if exists core.fn_create_company_full(text, text, text, uuid, jsonb, jsonb);
-

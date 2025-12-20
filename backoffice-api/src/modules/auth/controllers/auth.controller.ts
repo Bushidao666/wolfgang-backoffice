@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 
 import { CurrentUser } from "../../../common/decorators/current-user.decorator";
 import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
+import { HoldingRoleGuard } from "../guards/holding-role.guard";
 import { AuthenticatedUser } from "../strategies/jwt.strategy";
 import { AuthResponseDto } from "../dto/auth-response.dto";
 import { ForgotPasswordDto } from "../dto/forgot-password.dto";
@@ -29,7 +30,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @ApiOkResponse({ description: "Logout" })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, HoldingRoleGuard)
   @Post("logout")
   logout(@Headers("authorization") authorization?: string) {
     const token = authorization?.startsWith("Bearer ") ? authorization.slice("Bearer ".length) : undefined;
@@ -50,7 +51,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @ApiOkResponse({ description: "Current user" })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, HoldingRoleGuard)
   @Get("me")
   me(@CurrentUser() user: AuthenticatedUser) {
     return user;

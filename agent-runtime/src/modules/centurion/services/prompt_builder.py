@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import Any
 
@@ -22,6 +23,7 @@ class PromptBuilder:
         pending_count: int,
         rag_items: list[dict[str, Any]] | None = None,
         knowledge_items: list[dict[str, Any]] | None = None,
+        include_media_tools: bool = False,
     ) -> Prompt:
         base_prompt = centurion_config.get("prompt") or "Você é um SDR educado e objetivo."
         system_prompt = base_prompt
@@ -44,6 +46,18 @@ class PromptBuilder:
                     formatted.append(f"[{title}] {content.strip()}")
             if formatted:
                 system_prompt += "\n\n<knowledge_base>\n" + "\n\n".join(formatted[:8]) + "\n</knowledge_base>"
+
+        if include_media_tools:
+            system_prompt += (
+                "\n\n<media_tools>\n"
+                "Se você decidir enviar uma mídia ao usuário, use a tool `media_search_assets` para encontrar assets.\n"
+                "Depois, inclua um bloco no FINAL da sua resposta (não mostre para o usuário) no formato:\n"
+                "```media\n"
+                "[{\"asset_id\":\"<uuid>\",\"type\":\"image|video|audio|document\",\"caption\":\"opcional\"}]\n"
+                "```\n"
+                "Use somente asset_id retornado pela tool.\n"
+                "</media_tools>"
+            )
 
         base_messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
 
@@ -71,3 +85,37 @@ class PromptBuilder:
             if last.direction == "inbound":
                 to_remove -= 1
         return trimmed
+
+    def build_qualification_extraction_messages(
+        self,
+        *,
+        qualification_rules: dict[str, Any],
+        conversation_text: str,
+        previous_data: dict[str, Any] | None = None,
+    ) -> list[dict[str, str]]:
+        """
+        Prompt used to extract structured qualification fields.
+
+        The model output is parsed into a Pydantic schema (Agno structured output),
+        and the runtime applies deterministic rules for score/threshold decisions.
+        """
+        required_fields = list(qualification_rules.get("required_fields") or [])
+        threshold = qualification_rules.get("threshold")
+
+        system = (
+            "Você é um extrator de dados para qualificação de leads.\n"
+            "Regras:\n"
+            "- Extraia apenas informações explicitamente presentes no texto.\n"
+            "- Não invente valores.\n"
+            "- Se não houver evidência suficiente, use null.\n"
+            "- Preserve o formato original quando possível (ex.: 'R$ 1.500,00', '12/12/2025').\n"
+            "- Quando possível, inclua uma evidência curta (trecho) para cada extração.\n"
+        )
+
+        payload = {
+            "qualification_rules": {"required_fields": required_fields, "threshold": threshold},
+            "previous_data": dict(previous_data or {}),
+            "conversation_text": conversation_text,
+        }
+        user = json.dumps(payload, ensure_ascii=False)
+        return [{"role": "system", "content": system}, {"role": "user", "content": user}]

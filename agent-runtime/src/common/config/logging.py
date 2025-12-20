@@ -24,6 +24,8 @@ REDACT_KEYS = {
     "supabase_service_role_key",
 }
 
+REDACT_KEYWORDS = ("password", "token", "secret", "api_key", "apikey", "authorization")
+
 STANDARD_RECORD_ATTRS = {
     "name",
     "msg",
@@ -68,7 +70,7 @@ def _redact(value: Any, *, depth: int = 6, seen: set[int] | None = None) -> Any:
 
         out: dict[str, Any] = {}
         for k, v in value.items():
-            if isinstance(k, str) and k.lower() in REDACT_KEYS:
+            if isinstance(k, str) and (k.lower() in REDACT_KEYS or any(kw in k.lower() for kw in REDACT_KEYWORDS)):
                 out[k] = "[REDACTED]"
                 continue
             out[k] = _redact(v, depth=depth - 1, seen=seen)

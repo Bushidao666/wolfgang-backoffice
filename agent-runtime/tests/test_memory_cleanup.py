@@ -9,10 +9,15 @@ from modules.memory.services.memory_cleanup import MemoryCleanupWorker
 class _Db:
     def __init__(self):
         self.executed: list[str] = []
+        self.fetched: list[str] = []
 
     async def execute(self, query: str, *args):  # noqa: ARG002
         self.executed.append(query)
         return "OK"
+
+    async def fetch(self, query: str, *args):  # noqa: ARG002
+        self.fetched.append(query)
+        return []
 
 
 @pytest.mark.asyncio
@@ -41,4 +46,3 @@ async def test_cleanup_worker_runs_once_and_can_be_cancelled(monkeypatch):
         await worker.run_forever()
 
     assert db.executed
-

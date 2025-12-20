@@ -6,12 +6,13 @@ import { UserRole } from "../../../common/enums/user-role.enum";
 import { CompanyGuard } from "../../../common/guards/company.guard";
 import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../../../common/guards/roles.guard";
+import { HoldingRoleGuard } from "../../auth/guards/holding-role.guard";
 import { CreateMcpServerDto } from "../dto/create-mcp-server.dto";
 import { McpService } from "../services/mcp.service";
 
 @ApiTags("MCP")
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard, CompanyGuard)
+@UseGuards(JwtAuthGuard, HoldingRoleGuard, RolesGuard, CompanyGuard)
 @Controller("centurions/:id/mcp-servers")
 export class McpController {
   constructor(private readonly mcp: McpService) {}
@@ -40,4 +41,3 @@ export class McpController {
     return { ok: true };
   }
 }
-

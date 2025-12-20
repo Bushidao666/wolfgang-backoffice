@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import pytest
 
 from modules.tools.domain.tool import McpServerConfig
-from modules.tools.services.mcp_registry import McpRegistry, McpTool, McpError
+from modules.tools.services.agno_mcp_bridge import AgnoMcpBridgeError, AgnoMcpToolSpec
+from modules.tools.services.mcp_registry import McpError, McpRegistry
 
 
 class _Repo:
@@ -12,15 +15,6 @@ class _Repo:
 
     async def update_mcp_tools(self, **kwargs):
         self.updated.append(kwargs)
-
-
-class _Stream:
-    def __init__(self, lines: list[str]):
-        self._lines = lines
-
-    async def aiter_lines(self):
-        for line in self._lines:
-            yield line
 
 
 def _server(**overrides) -> McpServerConfig:
@@ -46,28 +40,26 @@ async def test_list_tools_uses_cached_tools_when_recent_and_connected(monkeypatc
     repo = _Repo()
     registry = McpRegistry(repo=repo)  # type: ignore[arg-type]
 
-    called = {"fetch": False}
-
-    async def fail_fetch(*args, **kwargs):  # noqa: ARG001
-        called["fetch"] = True
+    async def fail_list(server):  # noqa: ARG001
         raise AssertionError("should not fetch")
 
-    monkeypatch.setattr(registry, "_fetch_tools", fail_fetch)
+    monkeypatch.setattr(registry._bridge, "list_tools", fail_list)  # noqa: SLF001
 
     server = _server(
         tools_available=[{"name": "t1", "description": "d", "inputSchema": {"type": "object", "properties": {}}}],
         connection_status="connected",
-        last_tools_sync_at=__import__("datetime").datetime.now(__import__("datetime").timezone.utc),
+        last_tools_sync_at=datetime.now(timezone.utc),
     )
 
     tools = await registry.list_tools(server, refresh=False)
     assert tools and tools[0].name == "t1"
-    assert called["fetch"] is False
+    assert repo.updated == []
 
 
 def test_parse_tools_accepts_multiple_schema_keys():
     repo = _Repo()
     registry = McpRegistry(repo=repo)  # type: ignore[arg-type]
+
     tools = registry._parse_tools(  # noqa: SLF001
         [
             {"name": "a", "inputSchema": {"type": "object"}},
@@ -79,32 +71,17 @@ def test_parse_tools_accepts_multiple_schema_keys():
     assert tools[2].input_schema["type"] == "object"
 
 
-def test_build_headers_supports_none_bearer_and_api_key():
-    repo = _Repo()
-    registry = McpRegistry(repo=repo)  # type: ignore[arg-type]
-
-    server_none = _server(auth_type=None, auth_config={})
-    assert registry._build_headers(server_none)["Accept"] == "text/event-stream"  # noqa: SLF001
-
-    server_bearer = _server(auth_type="bearer", auth_config={"token": "t"})
-    assert registry._build_headers(server_bearer)["Authorization"] == "Bearer t"  # noqa: SLF001
-
-    server_api = _server(auth_type="api_key", auth_config={"header_name": "x-k", "key": "v"})
-    assert registry._build_headers(server_api)["x-k"] == "v"  # noqa: SLF001
-
-
 @pytest.mark.asyncio
 async def test_list_tools_refresh_updates_repo(monkeypatch):
     repo = _Repo()
     registry = McpRegistry(repo=repo)  # type: ignore[arg-type]
 
-    async def fake_fetch(server):  # noqa: ARG001
-        return [McpTool(name="t1", description=None, input_schema={"type": "object"})]
+    async def fake_list(server):  # noqa: ARG001
+        return [AgnoMcpToolSpec(name="t1", description=None, input_schema={"type": "object"})]
 
-    monkeypatch.setattr(registry, "_fetch_tools", fake_fetch)
+    monkeypatch.setattr(registry._bridge, "list_tools", fake_list)  # noqa: SLF001
 
-    server = _server()
-    tools = await registry.list_tools(server, refresh=True)
+    tools = await registry.list_tools(_server(), refresh=True)
     assert [t.name for t in tools] == ["t1"]
     assert repo.updated and repo.updated[0]["connection_status"] == "connected"
 
@@ -114,124 +91,30 @@ async def test_list_tools_refresh_on_error_marks_repo_and_returns_cached(monkeyp
     repo = _Repo()
     registry = McpRegistry(repo=repo)  # type: ignore[arg-type]
 
-    async def fake_fetch(server):  # noqa: ARG001
+    async def fail_list(server):  # noqa: ARG001
         raise RuntimeError("boom")
 
-    monkeypatch.setattr(registry, "_fetch_tools", fake_fetch)
+    monkeypatch.setattr(registry._bridge, "list_tools", fail_list)  # noqa: SLF001
 
-    server = _server(tools_available=[{"name": "cached"}], connection_status="connected")
+    server = _server(
+        tools_available=[{"name": "cached", "inputSchema": {"type": "object", "properties": {}}}],
+        connection_status="connected",
+    )
     tools = await registry.list_tools(server, refresh=True)
     assert [t.name for t in tools] == ["cached"]
     assert repo.updated and repo.updated[0]["connection_status"] == "error"
 
 
 @pytest.mark.asyncio
-async def test_rpc_posts_initialize_and_call_and_returns_result(monkeypatch):
+async def test_call_tool_wraps_bridge_errors(monkeypatch):
     repo = _Repo()
     registry = McpRegistry(repo=repo)  # type: ignore[arg-type]
 
-    ids = ["req1", "init1"]
+    async def fail_call(*args, **kwargs):  # noqa: ANN001, ARG001
+        raise AgnoMcpBridgeError("nope")
 
-    def fake_uuid4():
-        return ids.pop(0)
-
-    monkeypatch.setattr("modules.tools.services.mcp_registry.uuid.uuid4", fake_uuid4)
-
-    class _PostRes:
-        status_code = 200
-
-    class _StreamObj:
-        status_code = 200
-
-        def __init__(self, lines):
-            self._lines = lines
-
-        async def aiter_lines(self):
-            for l in self._lines:
-                yield l
-
-    class _StreamCtx:
-        def __init__(self, stream):
-            self._stream = stream
-
-        async def __aenter__(self):
-            return self._stream
-
-        async def __aexit__(self, exc_type, exc, tb):  # noqa: ARG002
-            return False
-
-    class _Client:
-        def __init__(self, *a, **k):  # noqa: ARG002
-            self.posts: list[tuple[str, dict]] = []
-            self.stream_url: str | None = None
-
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, exc_type, exc, tb):  # noqa: ARG002
-            return False
-
-        def stream(self, method: str, url: str):  # noqa: ARG002
-            self.stream_url = url
-            lines = [
-                'data: {"jsonrpc":"2.0","id":"init1","result":{"ok":1}}',
-                "",
-                'data: {"jsonrpc":"2.0","id":"req1","result":{"answer":2}}',
-                "",
-            ]
-            return _StreamCtx(_StreamObj(lines))
-
-        async def post(self, url: str, json: dict):  # noqa: A002
-            self.posts.append((url, json))
-            return _PostRes()
-
-    monkeypatch.setattr("modules.tools.services.mcp_registry.httpx.AsyncClient", _Client)
-
-    server = _server(server_url="https://mcp.test")
-    res = await registry._rpc(server, method="tools/list", params={})  # noqa: SLF001
-    assert res == {"answer": 2}
-
-
-@pytest.mark.asyncio
-async def test_wait_response_returns_matching_result():
-    repo = _Repo()
-    registry = McpRegistry(repo=repo)  # type: ignore[arg-type]
-
-    stream = _Stream(
-        [
-            ": keep-alive",
-            'data: {"jsonrpc":"2.0","id":"other","result":{"x":1}}',
-            "",
-            'data: {"jsonrpc":"2.0","id":"req1","result":{"ok":true}}',
-            "",
-        ]
-    )
-
-    res = await registry._wait_response(stream, "req1")  # noqa: SLF001
-    assert res == {"ok": True}
-
-
-@pytest.mark.asyncio
-async def test_wait_response_raises_on_error():
-    repo = _Repo()
-    registry = McpRegistry(repo=repo)  # type: ignore[arg-type]
-
-    stream = _Stream(
-        [
-            'data: {"jsonrpc":"2.0","id":"req1","error":{"message":"boom"}}',
-            "",
-        ]
-    )
+    monkeypatch.setattr(registry._bridge, "call_tool", fail_call)  # noqa: SLF001
 
     with pytest.raises(McpError):
-        await registry._wait_response(stream, "req1")  # noqa: SLF001
+        await registry.call_tool(_server(), tool_name="x", arguments={})
 
-
-@pytest.mark.asyncio
-async def test_wait_response_raises_when_stream_ends():
-    repo = _Repo()
-    registry = McpRegistry(repo=repo)  # type: ignore[arg-type]
-
-    stream = _Stream([])
-    with pytest.raises(McpError):
-        await registry._wait_response(stream, "req1")  # noqa: SLF001

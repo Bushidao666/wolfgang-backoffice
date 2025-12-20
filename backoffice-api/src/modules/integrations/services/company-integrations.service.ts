@@ -113,4 +113,17 @@ export class CompanyIntegrationsService {
       .eq("provider", provider);
     if (error) throw new ValidationError("Failed to update integration status", { error });
   }
+
+  async markTesting(companyId: string, provider: IntegrationProvider) {
+    const { error } = await this.admin()
+      .schema("core")
+      .from("company_integration_bindings")
+      .update({
+        status: "testing",
+        last_error: null,
+      })
+      .eq("company_id", companyId)
+      .eq("provider", provider);
+    if (error) throw new ValidationError("Failed to update integration status", { error });
+  }
 }

@@ -4,6 +4,7 @@ import { NotFoundError, ValidationError } from "@wolfgang/contracts";
 
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
 import type { LeadFiltersDto } from "../dto/lead-filters.dto";
+import type { LeadQualificationEventsResponseDto } from "../dto/qualification-events.dto";
 import type { LeadListResponseDto, LeadResponseDto } from "../dto/lead-response.dto";
 
 @Injectable()
@@ -76,5 +77,33 @@ export class LeadsService {
     if (!data) throw new NotFoundError("Lead not found");
     return data as unknown as LeadResponseDto;
   }
-}
 
+  async listQualificationEvents(
+    companyId: string,
+    leadId: string,
+    opts: { limit?: number; offset?: number } = {},
+  ): Promise<LeadQualificationEventsResponseDto> {
+    const limit = Math.min(200, Math.max(1, Number(opts.limit ?? 50)));
+    const offset = Math.max(0, Number(opts.offset ?? 0));
+
+    const { data, error, count } = await this.admin()
+      .schema("core")
+      .from("lead_qualification_events")
+      .select("*", { count: "exact" })
+      .eq("company_id", companyId)
+      .eq("lead_id", leadId)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw new ValidationError("Failed to list qualification events", { error });
+
+    return {
+      lead_id: leadId,
+      company_id: companyId,
+      total: count ?? 0,
+      limit,
+      offset,
+      events: (data ?? []) as any,
+    };
+  }
+}

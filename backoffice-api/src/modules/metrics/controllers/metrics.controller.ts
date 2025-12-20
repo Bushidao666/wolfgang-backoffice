@@ -6,12 +6,13 @@ import { UserRole } from "../../../common/enums/user-role.enum";
 import { CompanyGuard } from "../../../common/guards/company.guard";
 import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../../../common/guards/roles.guard";
+import { HoldingRoleGuard } from "../../auth/guards/holding-role.guard";
 import { MetricsByCenturionDto, MetricsConversionDto, MetricsSummaryDto, MetricsTimelineDto } from "../dto/metrics-response.dto";
 import { MetricsService } from "../services/metrics.service";
 
 @ApiTags("Metrics")
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard, CompanyGuard)
+@UseGuards(JwtAuthGuard, HoldingRoleGuard, RolesGuard, CompanyGuard)
 @Controller("metrics")
 export class MetricsController {
   constructor(private readonly metrics: MetricsService) {}
@@ -50,4 +51,3 @@ export class MetricsController {
     return this.metrics.summary(companyId, { from, to });
   }
 }
-

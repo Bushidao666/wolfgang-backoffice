@@ -6,12 +6,13 @@ import { UserRole } from "../../../common/enums/user-role.enum";
 import { CompanyGuard } from "../../../common/guards/company.guard";
 import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../../../common/guards/roles.guard";
+import { HoldingRoleGuard } from "../../auth/guards/holding-role.guard";
 import { CreateFollowupRuleDto } from "../dto/create-followup-rule.dto";
 import { FollowupsService } from "../services/followups.service";
 
 @ApiTags("FollowUps")
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard, CompanyGuard)
+@UseGuards(JwtAuthGuard, HoldingRoleGuard, RolesGuard, CompanyGuard)
 @Controller("centurions/:id/followup-rules")
 export class FollowupsController {
   constructor(private readonly followups: FollowupsService) {}
@@ -51,4 +52,3 @@ export class FollowupsController {
     return { ok: true };
   }
 }
-

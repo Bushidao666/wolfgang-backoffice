@@ -19,12 +19,13 @@ import { UserRole } from "../../../common/enums/user-role.enum";
 import { CompanyGuard } from "../../../common/guards/company.guard";
 import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../../../common/guards/roles.guard";
+import { HoldingRoleGuard } from "../../auth/guards/holding-role.guard";
 import { CreateContractTemplateDto } from "../dto/create-contract-template.dto";
 import { ContractTemplatesService } from "../services/contract-templates.service";
 
 @ApiTags("ContractTemplates")
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard, CompanyGuard)
+@UseGuards(JwtAuthGuard, HoldingRoleGuard, RolesGuard, CompanyGuard)
 @Controller("contracts/templates")
 export class ContractTemplatesController {
   constructor(private readonly templates: ContractTemplatesService) {}
@@ -68,4 +69,3 @@ export class ContractTemplatesController {
     return { ok: true };
   }
 }
-

@@ -22,13 +22,14 @@ import { UserRole } from "../../../common/enums/user-role.enum";
 import { CompanyGuard } from "../../../common/guards/company.guard";
 import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../../../common/guards/roles.guard";
+import { HoldingRoleGuard } from "../../auth/guards/holding-role.guard";
 import type { AuthenticatedUser } from "../../auth/strategies/jwt.strategy";
 import { UploadDocumentDto } from "../dto/upload-document.dto";
 import { KbService } from "../services/kb.service";
 
 @ApiTags("KnowledgeBase")
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard, CompanyGuard)
+@UseGuards(JwtAuthGuard, HoldingRoleGuard, RolesGuard, CompanyGuard)
 @Controller("knowledge-base")
 export class KbController {
   constructor(private readonly kb: KbService) {}
@@ -71,4 +72,3 @@ export class KbController {
     return { ok: true };
   }
 }
-

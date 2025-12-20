@@ -6,12 +6,12 @@ import { CredentialSetsController } from "./controllers/credential-sets.controll
 import { CompanyIntegrationsService } from "./services/company-integrations.service";
 import { CredentialSetsService } from "./services/credential-sets.service";
 import { IntegrationsResolverService } from "./services/integrations-resolver.service";
+import { IntegrationValidatorService } from "./services/integration-validator.service";
 
 @Module({
   imports: [SupabaseModule],
   controllers: [CredentialSetsController, CompanyIntegrationsController],
-  providers: [CredentialSetsService, CompanyIntegrationsService, IntegrationsResolverService],
+  providers: [CredentialSetsService, CompanyIntegrationsService, IntegrationsResolverService, IntegrationValidatorService],
   exports: [IntegrationsResolverService],
 })
 export class IntegrationsModule {}
-

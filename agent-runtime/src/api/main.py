@@ -18,6 +18,7 @@ from common.middleware.logging import LoggingMiddleware
 from handlers.proactive_handler import ProactiveHandler
 from modules.centurion.handlers.debounce_handler import DebounceWorker
 from modules.centurion.handlers.message_handler import MessageHandler
+from modules.centurion.jobs.conversation_watchdog import ConversationWatchdog
 from modules.memory.services.memory_cleanup import MemoryCleanupWorker
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ async def lifespan(app: FastAPI):
     db = None
     redis = None
     pubsub = None
-    subscriber_task = debounce_task = proactive_task = cleanup_task = None
+    subscriber_task = debounce_task = proactive_task = cleanup_task = watchdog_task = None
 
     if not settings.disable_connections:
         try:
@@ -63,12 +64,14 @@ async def lifespan(app: FastAPI):
             debounce_worker = DebounceWorker(db=db, redis=redis)
             proactive_handler = ProactiveHandler(db=db, redis=redis)
             memory_cleanup = MemoryCleanupWorker(db=db, redis=redis)
+            watchdog = ConversationWatchdog(db=db)
 
             if not settings.disable_workers:
                 subscriber_task = asyncio.create_task(pubsub.run_forever())
                 debounce_task = asyncio.create_task(debounce_worker.run_forever())
                 proactive_task = asyncio.create_task(proactive_handler.run_forever())
                 cleanup_task = asyncio.create_task(memory_cleanup.run_forever())
+                watchdog_task = asyncio.create_task(watchdog.run_forever())
         except Exception as e:
             app.state.connection_mode = "failed"
             app.state.connection_error_type = type(e).__name__
@@ -77,7 +80,7 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
-        for task in (subscriber_task, debounce_task, proactive_task, cleanup_task):
+        for task in (subscriber_task, debounce_task, proactive_task, cleanup_task, watchdog_task):
             if task:
                 task.cancel()
         if pubsub:

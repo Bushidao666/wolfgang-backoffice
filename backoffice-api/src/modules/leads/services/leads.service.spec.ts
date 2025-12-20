@@ -102,4 +102,25 @@ describe("LeadsService", () => {
     leadQuery.maybeSingle.mockResolvedValueOnce({ data: { id: "l1" }, error: null });
     await expect(service.get("c1", "l1")).resolves.toMatchObject({ id: "l1" });
   });
+
+  it("listQualificationEvents queries lead_qualification_events with pagination", async () => {
+    const eventsQuery = createLeadsQuery({ data: [{ id: "e1" }], error: null, count: 1 });
+
+    const admin = {
+      schema: jest.fn(() => ({
+        from: jest.fn(() => eventsQuery),
+      })),
+    };
+
+    const service = new LeadsService({ getAdminClient: jest.fn(() => admin as any) } as any);
+
+    const res = await service.listQualificationEvents("c1", "l1", { limit: 10, offset: 20 });
+
+    expect(admin.schema).toHaveBeenCalledWith("core");
+    expect(eventsQuery.eq).toHaveBeenCalledWith("company_id", "c1");
+    expect(eventsQuery.eq).toHaveBeenCalledWith("lead_id", "l1");
+    expect(eventsQuery.range).toHaveBeenCalledWith(20, 29);
+    expect(res.total).toBe(1);
+    expect(res.events).toHaveLength(1);
+  });
 });

@@ -13,6 +13,10 @@ export type ResolvedIntegration = {
   secrets: Record<string, unknown>;
 };
 
+export { testAutentiqueIntegration } from "./providers/autentique";
+export { testEvolutionIntegration } from "./providers/evolution";
+export { testOpenAIIntegration } from "./providers/openai";
+
 type IntegrationCredentialSetRow = {
   id: string;
   provider: IntegrationProvider;
@@ -105,4 +109,3 @@ export async function resolveCompanyIntegration(args: {
     secrets: decryptJson(set.secrets_enc ?? ""),
   };
 }
-

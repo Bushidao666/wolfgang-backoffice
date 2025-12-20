@@ -6,6 +6,7 @@ import { Roles } from "../../../common/decorators/roles.decorator";
 import { UserRole } from "../../../common/enums/user-role.enum";
 import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../../../common/guards/roles.guard";
+import { HoldingRoleGuard } from "../../auth/guards/holding-role.guard";
 import type { AuthenticatedUser } from "../../auth/strategies/jwt.strategy";
 import { CreateCredentialSetDto } from "../dto/create-credential-set.dto";
 import { CredentialSetResponseDto } from "../dto/credential-set-response.dto";
@@ -15,7 +16,7 @@ import { CredentialSetsService } from "../services/credential-sets.service";
 @ApiTags("Integrations")
 @ApiBearerAuth()
 @Controller("integrations/credential-sets")
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, HoldingRoleGuard, RolesGuard)
 export class CredentialSetsController {
   constructor(private readonly sets: CredentialSetsService) {}
 
@@ -62,4 +63,3 @@ export class CredentialSetsController {
     return { ok: true };
   }
 }
-

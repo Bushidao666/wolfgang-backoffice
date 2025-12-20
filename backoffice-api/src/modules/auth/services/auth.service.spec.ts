@@ -4,6 +4,17 @@ import { ValidationError } from "@wolfgang/contracts";
 
 import { AuthService } from "./auth.service";
 
+function buildFakeJwt(payload: Record<string, unknown>) {
+  const header = { alg: "none", typ: "JWT" };
+  const enc = (obj: Record<string, unknown>) =>
+    Buffer.from(JSON.stringify(obj), "utf8")
+      .toString("base64")
+      .replace(/=+$/g, "")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+  return `${enc(header)}.${enc(payload)}.sig`;
+}
+
 function createSupabaseMock() {
   const signInWithPassword = jest.fn();
   const refreshSession = jest.fn();
@@ -43,15 +54,16 @@ describe("AuthService", () => {
 
   it("login returns tokens when session exists", async () => {
     const { supabase, signInWithPassword } = createSupabaseMock();
+    const accessToken = buildFakeJwt({ app_metadata: { role: "super_admin" } });
     signInWithPassword.mockResolvedValue({
-      data: { session: { access_token: "a", refresh_token: "r", expires_in: 3600, token_type: "bearer" }, user: { id: "u" } },
+      data: { session: { access_token: accessToken, refresh_token: "r", expires_in: 3600, token_type: "bearer" }, user: { id: "u" } },
       error: null,
     });
 
     const service = new AuthService(supabase);
     const result = await service.login({ email: "a@b.com", password: "x" });
 
-    expect(result.access_token).toBe("a");
+    expect(result.access_token).toBe(accessToken);
     expect(result.refresh_token).toBe("r");
     expect(signInWithPassword).toHaveBeenCalledWith({ email: "a@b.com", password: "x" });
   });
@@ -66,15 +78,16 @@ describe("AuthService", () => {
 
   it("refresh returns tokens when session exists", async () => {
     const { supabase, refreshSession } = createSupabaseMock();
+    const accessToken = buildFakeJwt({ app_metadata: { role: "super_admin" } });
     refreshSession.mockResolvedValue({
-      data: { session: { access_token: "a2", refresh_token: "r2", expires_in: 3600, token_type: "bearer" }, user: { id: "u2" } },
+      data: { session: { access_token: accessToken, refresh_token: "r2", expires_in: 3600, token_type: "bearer" }, user: { id: "u2" } },
       error: null,
     });
 
     const service = new AuthService(supabase);
     const result = await service.refresh("refresh-token");
 
-    expect(result.access_token).toBe("a2");
+    expect(result.access_token).toBe(accessToken);
     expect(refreshSession).toHaveBeenCalledWith({ refresh_token: "refresh-token" });
   });
 
@@ -123,4 +136,3 @@ describe("AuthService", () => {
     expect(supabase.getUserClient).toHaveBeenCalledWith("token");
   });
 });
-

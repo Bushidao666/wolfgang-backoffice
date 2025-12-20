@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+from common.infrastructure.integrations.openai_resolver import OpenAIResolved
 from modules.centurion.services.centurion_service import CenturionService
 
 
@@ -102,3 +103,54 @@ async def test_publish_lead_qualified_emits_event():
     assert data["payload"]["lead_id"] == "l1"
     assert data["payload"]["criteria"] == ["budget"]
 
+
+@pytest.mark.asyncio
+async def test_call_llm_includes_media_tool_when_openai_is_configured(monkeypatch: pytest.MonkeyPatch):
+    db = _FakeDb({})
+    redis = _FakeRedis()
+    service = CenturionService(db=db, redis=redis)  # type: ignore[arg-type]
+
+    async def fake_resolve_optional(*, company_id: str):  # noqa: ARG001
+        return OpenAIResolved(
+            api_key="k",
+            base_url="https://example.com",
+            chat_model="gpt-4o-mini",
+            vision_model="gpt-4o-mini",
+            stt_model="whisper-1",
+            embedding_model="text-embedding-3-small",
+        )
+
+    async def fake_get_tools(*, company_id: str, centurion_id: str):  # noqa: ARG001
+        return []
+
+    captured: dict[str, object] = {}
+
+    class _FakeAgent:
+        async def arun(self, *args, **kwargs):  # noqa: ANN002, ANN003, ARG002
+            class _Out:
+                content = "ok"
+
+            return _Out()
+
+    def fake_build_agent(**kwargs):  # noqa: ANN003
+        captured["tools"] = kwargs.get("tools")
+        return _FakeAgent()
+
+    monkeypatch.setattr(service._openai, "resolve_optional", fake_resolve_optional)  # noqa: SLF001
+    monkeypatch.setattr(service._tools, "get_tools", fake_get_tools)  # noqa: SLF001
+    monkeypatch.setattr(service._agno_factory, "build_agent", fake_build_agent)  # noqa: SLF001
+
+    content = await service._call_llm(  # noqa: SLF001
+        [{"role": "system", "content": "system"}, {"role": "user", "content": "oi"}],
+        config={"prompt": "system"},
+        company_id="co1",
+        centurion_id="ct1",
+        conversation_id="conv1",
+        lead_id="lead1",
+        include_media_tools=True,
+    )
+    assert content == "ok"
+
+    tools = captured.get("tools")
+    assert isinstance(tools, list)
+    assert any(getattr(t, "name", None) == "media_search_assets" for t in tools)

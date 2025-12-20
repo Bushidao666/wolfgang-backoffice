@@ -3,6 +3,7 @@ import base64
 import httpx
 import pytest
 
+from common.security.egress_policy import EgressPolicy
 from modules.tools.domain.tool import ToolConfig
 from modules.tools.services.tool_executor import ToolExecutionError, ToolExecutor
 
@@ -29,7 +30,7 @@ def _tool(**overrides) -> ToolConfig:
 
 
 def test_build_headers_supports_bearer_and_api_key_and_basic():
-    executor = ToolExecutor()
+    executor = ToolExecutor(egress_policy=EgressPolicy(block_private_networks=False))
 
     tool = _tool(auth_type="bearer", auth_config={"token": "abc"})
     headers = executor._build_headers(tool, params={})
@@ -50,7 +51,7 @@ def test_build_headers_supports_bearer_and_api_key_and_basic():
 
 
 def test_build_headers_rejects_missing_auth_details():
-    executor = ToolExecutor()
+    executor = ToolExecutor(egress_policy=EgressPolicy(block_private_networks=False))
 
     with pytest.raises(ToolExecutionError):
         executor._build_headers(_tool(auth_type="bearer", auth_config={}), params={})
@@ -61,7 +62,7 @@ def test_build_headers_rejects_missing_auth_details():
 
 @pytest.mark.asyncio
 async def test_execute_http_rejects_unsupported_method():
-    executor = ToolExecutor()
+    executor = ToolExecutor(egress_policy=EgressPolicy(block_private_networks=False))
     with pytest.raises(ToolExecutionError) as err:
         await executor.execute_http(_tool(method="TRACE"), params={})
     assert "Unsupported HTTP method" in str(err.value)
@@ -80,7 +81,7 @@ async def test_execute_http_parses_json_and_validates_output(monkeypatch):
 
     monkeypatch.setattr(ToolExecutor, "_request_with_retry", fake_request, raising=True)
 
-    executor = ToolExecutor()
+    executor = ToolExecutor(egress_policy=EgressPolicy(block_private_networks=False))
     tool = _tool(
         input_schema={"type": "object", "properties": {"q": {"type": "string"}}, "required": ["q"]},
         output_schema={"type": "object", "properties": {"answer": {"type": "string"}}, "required": ["answer"]},
@@ -105,7 +106,7 @@ async def test_execute_http_raises_when_output_schema_does_not_match(monkeypatch
 
     monkeypatch.setattr(ToolExecutor, "_request_with_retry", fake_request, raising=True)
 
-    executor = ToolExecutor()
+    executor = ToolExecutor(egress_policy=EgressPolicy(block_private_networks=False))
     tool = _tool(
         output_schema={"type": "object", "properties": {"answer": {"type": "string"}}, "required": ["answer"]},
     )

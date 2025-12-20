@@ -33,6 +33,35 @@ export type LeadTimelineMessage = {
   created_at: string;
 };
 
+export type LeadQualificationEvent = {
+  id: string;
+  company_id: string;
+  lead_id: string;
+  conversation_id?: string | null;
+  centurion_id?: string | null;
+  correlation_id?: string | null;
+  causation_id?: string | null;
+  rules_hash: string;
+  rules?: Record<string, unknown> | null;
+  threshold: number;
+  score: number;
+  is_qualified: boolean;
+  required_met: boolean;
+  criteria?: unknown;
+  extracted?: Record<string, unknown> | null;
+  summary?: string | null;
+  created_at: string;
+};
+
+export type LeadQualificationEventsResponse = {
+  lead_id: string;
+  company_id: string;
+  total: number;
+  limit: number;
+  offset: number;
+  events: LeadQualificationEvent[];
+};
+
 export async function listLeads(
   companyId: string,
   params: {
@@ -73,3 +102,18 @@ export async function getLeadTimeline(companyId: string, leadId: string, params:
   }>(`/leads/${encodeURIComponent(leadId)}/timeline${query ? `?${query}` : ""}`, { headers: { "x-company-id": companyId } });
 }
 
+export async function getLeadQualificationEvents(
+  companyId: string,
+  leadId: string,
+  params: { limit?: number; offset?: number } = {},
+) {
+  const qs = new URLSearchParams();
+  if (params.limit) qs.set("limit", String(params.limit));
+  if (params.offset) qs.set("offset", String(params.offset));
+  const query = qs.toString();
+
+  return apiFetch<LeadQualificationEventsResponse>(
+    `/leads/${encodeURIComponent(leadId)}/qualification-events${query ? `?${query}` : ""}`,
+    { headers: { "x-company-id": companyId } },
+  );
+}

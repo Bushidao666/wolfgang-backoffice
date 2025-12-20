@@ -3,12 +3,14 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
 
 import { LoggerService } from "../../common/logging/logger.service";
 import { SupabaseModule } from "../supabase/supabase.module";
+import { AuditService } from "../../common/audit/audit.service";
 import { AuditInterceptor } from "./audit.interceptor";
 
 @Module({
   imports: [SupabaseModule],
   providers: [
     LoggerService,
+    AuditService,
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
@@ -16,4 +18,3 @@ import { AuditInterceptor } from "./audit.interceptor";
   ],
 })
 export class AuditModule {}
-

@@ -6,6 +6,8 @@ from typing import Any
 
 from jsonschema import exceptions, validators
 
+_MAX_SCHEMA_BYTES = 200_000
+
 
 class SchemaValidationError(ValueError):
     def __init__(self, message: str, *, errors: list[str] | None = None):
@@ -15,7 +17,12 @@ class SchemaValidationError(ValueError):
 
 def _schema_cache_key(schema: dict[str, Any]) -> str:
     try:
-        return json.dumps(schema, sort_keys=True, ensure_ascii=False)
+        raw = json.dumps(schema, sort_keys=True, ensure_ascii=False)
+        if len(raw.encode("utf-8")) > _MAX_SCHEMA_BYTES:
+            raise SchemaValidationError("schema is too large", errors=[f"max_bytes={_MAX_SCHEMA_BYTES}"])
+        return raw
+    except SchemaValidationError:
+        raise
     except Exception:
         return str(schema)
 
@@ -31,6 +38,8 @@ def _compile_validator(schema_key: str) -> Any:
 class SchemaValidator:
     def validate_schema(self, schema: dict[str, Any], *, label: str = "schema") -> None:
         try:
+            # Guard against pathological schemas (DoS / memory blowups).
+            _schema_cache_key(schema)
             cls = validators.validator_for(schema)
             cls.check_schema(schema)
         except exceptions.SchemaError as err:
@@ -54,4 +63,3 @@ class SchemaValidator:
             messages.append(f"{path}: {e.message}")
 
         raise SchemaValidationError(f"{label} does not match schema", errors=messages)
-

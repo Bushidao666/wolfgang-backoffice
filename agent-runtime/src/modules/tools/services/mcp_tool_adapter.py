@@ -28,7 +28,11 @@ class McpToolAdapter:
         fn_name = f"mcp_{server_ns}__{tool_ns}"[:64]
 
         async def _entrypoint(**kwargs: Any):
-            return await self._registry.call_tool(server, tool_name=tool.name, arguments=kwargs)
+            try:
+                return await self._registry.call_tool(server, tool_name=tool.name, arguments=kwargs)
+            except Exception as err:
+                # MCP failures should not crash the conversation; return a structured error the model can handle.
+                return {"ok": False, "error": str(err), "tool": tool.name, "server": server.name}
 
         return Function(
             name=fn_name,
@@ -37,4 +41,3 @@ class McpToolAdapter:
             entrypoint=_entrypoint,
             show_result=False,
         )
-

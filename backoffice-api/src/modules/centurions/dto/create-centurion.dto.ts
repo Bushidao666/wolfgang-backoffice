@@ -1,5 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsBoolean, IsInt, IsObject, IsOptional, IsString, Matches, Max, Min } from "class-validator";
+import { Type } from "class-transformer";
+import { IsBoolean, IsInt, IsObject, IsOptional, IsString, Matches, Max, Min, ValidateNested } from "class-validator";
+
+import { QualificationRulesDto } from "./qualification-rules.dto";
 
 export class CreateCenturionDto {
   @ApiProperty()
@@ -20,10 +23,11 @@ export class CreateCenturionDto {
   @IsObject()
   personality?: Record<string, unknown>;
 
-  @ApiPropertyOptional({ type: Object })
+  @ApiPropertyOptional({ type: QualificationRulesDto })
   @IsOptional()
-  @IsObject()
-  qualification_rules?: Record<string, unknown>;
+  @ValidateNested()
+  @Type(() => QualificationRulesDto)
+  qualification_rules?: QualificationRulesDto;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -104,10 +108,11 @@ export class UpdateCenturionDto {
   @IsObject()
   personality?: Record<string, unknown>;
 
-  @ApiPropertyOptional({ type: Object })
+  @ApiPropertyOptional({ type: QualificationRulesDto })
   @IsOptional()
-  @IsObject()
-  qualification_rules?: Record<string, unknown>;
+  @ValidateNested()
+  @Type(() => QualificationRulesDto)
+  qualification_rules?: QualificationRulesDto;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -165,4 +170,3 @@ export class UpdateCenturionDto {
   @Max(20)
   max_retries?: number;
 }
-

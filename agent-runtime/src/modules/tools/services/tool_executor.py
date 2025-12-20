@@ -9,6 +9,8 @@ from typing import Any
 import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential_jitter
 
+from common.security.egress_policy import EgressPolicy, EgressPolicyError
+from common.security.payload_limits import PayloadLimits
 from modules.tools.domain.tool import ToolConfig
 from modules.tools.services.schema_validator import SchemaValidationError, SchemaValidator
 
@@ -30,10 +32,30 @@ class ToolExecutionError(RuntimeError):
 
 
 class ToolExecutor:
-    def __init__(self, *, validator: SchemaValidator | None = None):
+    def __init__(
+        self,
+        *,
+        validator: SchemaValidator | None = None,
+        egress_policy: EgressPolicy | None = None,
+        payload_limits: PayloadLimits | None = None,
+    ):
         self._validator = validator or SchemaValidator()
+        self._egress = egress_policy or EgressPolicy.from_env()
+        self._limits = payload_limits or PayloadLimits.from_env()
 
     async def execute_http(self, tool: ToolConfig, params: dict[str, Any]) -> ToolResult:
+        # SSRF + allowlist guard (centralized, applies to all HTTP tools).
+        try:
+            await self._egress.assert_url_allowed(tool.endpoint)
+        except EgressPolicyError as err:
+            raise ToolExecutionError("Blocked by egress policy", details={"endpoint": tool.endpoint, "error": str(err)}) from err
+
+        # Bound request payloads (prevents oversized HTTP bodies).
+        try:
+            self._limits.ensure_tool_args(params, tool_name=tool.tool_name)
+        except Exception as err:
+            raise ToolExecutionError("Tool input too large", details={"error": str(err)}) from err
+
         if tool.input_schema:
             self._validator.validate_instance(tool.input_schema, params, label="tool input")
 
@@ -68,7 +90,9 @@ class ToolExecutor:
                     details={"errors": err.errors[:10]},
                 ) from err
 
-        return ToolResult(ok=ok, status_code=response.status_code, body=body, headers=dict(response.headers))
+        # Keep responses bounded for downstream memory/logging.
+        safe_body = self._limits.truncate_tool_result(body)
+        return ToolResult(ok=ok, status_code=response.status_code, body=safe_body, headers=dict(response.headers))
 
     @retry(
         reraise=True,
@@ -130,4 +154,3 @@ class ToolExecutor:
             return headers
 
         raise ToolExecutionError("Unsupported auth_type for tool", details={"auth_type": auth_type})
-

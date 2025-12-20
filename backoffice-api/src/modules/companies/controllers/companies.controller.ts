@@ -17,6 +17,7 @@ import { Roles } from "../../../common/decorators/roles.decorator";
 import { UserRole } from "../../../common/enums/user-role.enum";
 import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../../../common/guards/roles.guard";
+import { HoldingRoleGuard } from "../../auth/guards/holding-role.guard";
 import type { AuthenticatedUser } from "../../auth/strategies/jwt.strategy";
 import { CompanyResponseDto } from "../dto/company-response.dto";
 import { CreateCompanyDto } from "../dto/create-company.dto";
@@ -27,7 +28,7 @@ import { CompaniesService } from "../services/companies.service";
 @ApiTags("Companies")
 @ApiBearerAuth()
 @Controller("companies")
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, HoldingRoleGuard, RolesGuard)
 export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 
@@ -72,4 +73,3 @@ export class CompaniesController {
     await this.companiesService.archive(id);
   }
 }
-

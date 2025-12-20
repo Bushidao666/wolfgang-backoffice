@@ -224,8 +224,8 @@ export class CompaniesRepository {
         "Você é um SDR educado e objetivo. Faça perguntas para entender a necessidade do lead, coletar data, local e orçamento quando aplicável, e conduzir para o próximo passo.",
       personality: { tone: "friendly", language: "pt-BR" },
       qualification_rules: {
-        required_fields: ["nome", "data", "local", "orcamento"],
-        min_score: 0.7,
+        required_fields: ["budget", "date", "location"],
+        threshold: 1.0,
       },
       message_chunking_enabled: true,
       chunk_delay_ms: 1500,

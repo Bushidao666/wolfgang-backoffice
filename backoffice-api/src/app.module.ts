@@ -27,6 +27,7 @@ import { MarketingModule } from "./modules/marketing/marketing.module";
 import { MetricsModule } from "./modules/metrics/metrics.module";
 import { ToolsModule } from "./modules/tools/tools.module";
 import { IntegrationsModule } from "./modules/integrations/integrations.module";
+import { MediaModule } from "./modules/media/media.module";
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { IntegrationsModule } from "./modules/integrations/integrations.module";
     MetricsModule,
     ToolsModule,
     IntegrationsModule,
+    MediaModule,
     HealthModule,
   ],
   providers: [

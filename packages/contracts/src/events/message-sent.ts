@@ -2,10 +2,27 @@ import { z } from "zod";
 
 import { buildEventSchema, type EventEnvelope } from "./base";
 
-export const OutboundMessageSchema = z.object({
-  type: z.enum(["text"]),
+export const OutboundTextMessageSchema = z.object({
+  type: z.literal("text"),
   text: z.string().min(1),
 });
+
+export const OutboundMediaMessageSchema = z
+  .object({
+    type: z.enum(["image", "video", "audio", "document"]),
+    asset_id: z.string().uuid().optional(),
+    url: z.string().url().optional(),
+    mime_type: z.string().min(1).optional(),
+    caption: z.string().optional(),
+    filename: z.string().optional(),
+  })
+  .refine((m) => m.asset_id || m.url, { message: "asset_id or url is required" })
+  .refine((m) => m.asset_id || m.mime_type, { message: "mime_type is required when using url" });
+
+export const OutboundMessageSchema = z.discriminatedUnion("type", [
+  OutboundTextMessageSchema,
+  OutboundMediaMessageSchema,
+]);
 
 export const MessageSentPayloadSchema = z.object({
   instance_id: z.string().min(1),

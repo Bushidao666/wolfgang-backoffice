@@ -7,15 +7,28 @@ import httpx
 
 from common.infrastructure.database.supabase_client import SupabaseDb
 from common.infrastructure.integrations.openai_resolver import OpenAIResolver
+from common.security.egress_policy import EgressPolicy
+from common.security.payload_limits import PayloadLimits
 
 logger = logging.getLogger(__name__)
 
 
 class VisionService:
-    def __init__(self, *, db: SupabaseDb | None = None):
+    def __init__(
+        self,
+        *,
+        db: SupabaseDb | None = None,
+        egress_policy: EgressPolicy | None = None,
+        limits: PayloadLimits | None = None,
+    ):
         self._openai = OpenAIResolver(db) if db else None
+        self._egress = egress_policy or EgressPolicy.from_env()
+        self._limits = limits or PayloadLimits.from_env()
 
     async def describe(self, *, company_id: str, image_bytes: bytes, mime_type: str = "image/jpeg") -> str:
+        if len(image_bytes) > int(self._limits.vision_image_max_bytes):
+            raise ValueError("Image payload too large for vision")
+
         if self._openai:
             resolved = await self._openai.resolve_optional(company_id=company_id)
             if not resolved:
@@ -25,6 +38,8 @@ class VisionService:
             model = resolved.vision_model
         else:
             raise RuntimeError("SupabaseDb is required for vision (no env fallback)")
+
+        await self._egress.assert_url_allowed(base_url)
 
         b64 = base64.b64encode(image_bytes).decode("ascii")
         data_url = f"data:{mime_type};base64,{b64}"
@@ -59,5 +74,8 @@ class VisionService:
         except Exception as exc:
             raise RuntimeError("Unexpected vision response") from exc
 
-        logger.info("vision.completed", extra={"extra": {"chars": len(text or '')}})
-        return (text or "").strip()
+        trimmed = (text or "").strip()
+        if len(trimmed) > 8000:
+            trimmed = trimmed[:8000]
+        logger.info("vision.completed", extra={"extra": {"chars": len(trimmed)}})
+        return trimmed

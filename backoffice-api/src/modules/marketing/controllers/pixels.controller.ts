@@ -6,6 +6,7 @@ import { UserRole } from "../../../common/enums/user-role.enum";
 import { CompanyGuard } from "../../../common/guards/company.guard";
 import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../../../common/guards/roles.guard";
+import { HoldingRoleGuard } from "../../auth/guards/holding-role.guard";
 import { CreatePixelDto } from "../dto/create-pixel.dto";
 import { PixelResponseDto } from "../dto/pixel-response.dto";
 import { UpdatePixelDto } from "../dto/update-pixel.dto";
@@ -13,7 +14,7 @@ import { PixelsService } from "../services/pixels.service";
 
 @ApiTags("Pixels")
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard, CompanyGuard)
+@UseGuards(JwtAuthGuard, HoldingRoleGuard, RolesGuard, CompanyGuard)
 @Controller("pixels")
 export class PixelsController {
   constructor(private readonly pixels: PixelsService) {}
@@ -64,4 +65,3 @@ export class PixelsController {
     return this.pixels.test(companyId, id);
   }
 }
-

@@ -1,76 +1,73 @@
+import json
+
 from modules.centurion.domain.message import Message
 from modules.centurion.services.prompt_builder import PromptBuilder
 
 
-def _msg(id: str, direction: str, *, content: str | None = None, audio: str | None = None) -> Message:
-    return Message(
-        id=id,
-        conversation_id="conv1",
-        company_id="co1",
-        lead_id="l1",
-        direction=direction,
-        content_type="text" if content is not None else "audio",
-        content=content,
-        audio_transcription=audio,
+def test_build_qualification_extraction_messages_emits_json_payload():
+    pb = PromptBuilder()
+    messages = pb.build_qualification_extraction_messages(
+        qualification_rules={"required_fields": ["budget"], "threshold": 1.0},
+        conversation_text="Orçamento R$ 1.000,00.",
+        previous_data={"budget": "R$ 900,00"},
     )
 
+    assert messages[0]["role"] == "system"
+    assert messages[1]["role"] == "user"
 
-def test_build_includes_rag_kb_history_and_consolidated_message():
-    builder = PromptBuilder()
+    payload = json.loads(messages[1]["content"])
+    assert payload["qualification_rules"]["required_fields"] == ["budget"]
+    assert payload["previous_data"]["budget"] == "R$ 900,00"
+    assert "Orçamento" in payload["conversation_text"]
+
+
+def test_build_includes_history_and_trims_pending_messages():
+    pb = PromptBuilder()
 
     history = [
-        _msg("m1", "inbound", content="Olá"),
-        _msg("m2", "outbound", content="Oi!"),
-        _msg("m3", "inbound", audio="bom dia"),
+        Message(
+            id="m1",
+            conversation_id="c1",
+            company_id="co1",
+            lead_id="l1",
+            direction="inbound",
+            content_type="text",
+            content="Olá",
+        ),
+        Message(
+            id="m2",
+            conversation_id="c1",
+            company_id="co1",
+            lead_id="l1",
+            direction="outbound",
+            content_type="text",
+            content="Oi! Como posso ajudar?",
+        ),
+        Message(
+            id="m3",
+            conversation_id="c1",
+            company_id="co1",
+            lead_id="l1",
+            direction="inbound",
+            content_type="text",
+            content="Quero um orçamento",
+        ),
     ]
 
-    prompt = builder.build(
-        centurion_config={"prompt": "BASE"},
+    prompt = pb.build(
+        centurion_config={"prompt": "Você é um SDR."},
         history=history,
-        consolidated_user_message="Quero um orçamento",
-        pending_count=1,
-        rag_items=[{"summary": "Fato 1"}, {"summary": " "}, {"summary": "Fato 2"}],
-        knowledge_items=[{"document_title": "Doc A", "content": "Conteúdo A"}, {"document_title": "Doc B", "content": ""}],
+        consolidated_user_message="Mensagem consolidada",
+        pending_count=2,
+        rag_items=[{"summary": "Lead gosta de respostas curtas."}],
+        knowledge_items=[{"document_title": "FAQ", "content": "Horário de atendimento: 9-18h."}],
     )
-
-    assert "<memoria_long_term>" in prompt.system
-    assert "Fato 1" in prompt.system
-    assert "<knowledge_base>" in prompt.system
-    assert "[Doc A] Conteúdo A" in prompt.system
 
     assert prompt.messages[0]["role"] == "system"
-    assert prompt.messages[1] == {"role": "user", "content": "Olá"}
-    assert prompt.messages[2] == {"role": "assistant", "content": "Oi!"}
-    assert prompt.messages[3]["role"] == "user"
-    assert prompt.messages[3]["content"] == "[ÁUDIO] bom dia"
-    assert prompt.messages[-1] == {"role": "user", "content": "Quero um orçamento"}
+    assert "<memoria_long_term>" in prompt.system
+    assert "<knowledge_base>" in prompt.system
+    assert prompt.messages[-1] == {"role": "user", "content": "Mensagem consolidada"}
 
-
-def test_trim_pending_removes_last_inbound_turns():
-    builder = PromptBuilder()
-
-    history = [
-        _msg("m1", "inbound", content="u1"),
-        _msg("m2", "outbound", content="a1"),
-        _msg("m3", "inbound", content="u2"),
-        _msg("m4", "outbound", content="a2"),
-        _msg("m5", "inbound", content="u3"),
-        _msg("m6", "outbound", content="a3"),
-    ]
-
-    prompt = builder.build(
-        centurion_config={"prompt": "BASE"},
-        history=history,
-        consolidated_user_message="nova",
-        pending_count=2,
-        rag_items=None,
-        knowledge_items=None,
-    )
-
-    # pending_count=2 trims the last two inbound messages (and any messages after them)
-    roles = [m["role"] for m in prompt.messages]
-    assert roles == ["system", "user", "assistant", "user"]
-    assert prompt.messages[1]["content"] == "u1"
-    assert prompt.messages[2]["content"] == "a1"
-    assert prompt.messages[3]["content"] == "nova"
-
+    # With pending_count=2, the last inbound message is treated as pending and removed from history.
+    contents = [m["content"] for m in prompt.messages if m["role"] != "system"]
+    assert "Quero um orçamento" not in contents

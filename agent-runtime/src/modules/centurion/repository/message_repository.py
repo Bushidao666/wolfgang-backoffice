@@ -10,6 +10,20 @@ class MessageRepository:
     def __init__(self, db: SupabaseDb):
         self._db = db
 
+    async def exists_channel_message_id(self, *, company_id: str, channel_message_id: str) -> bool:
+        row = await self._db.fetchrow(
+            """
+            select id
+            from core.messages
+            where company_id=$1
+              and channel_message_id=$2
+            limit 1
+            """,
+            company_id,
+            channel_message_id,
+        )
+        return bool(row and row.get("id"))
+
     async def save_message(
         self,
         *,
@@ -62,12 +76,26 @@ class MessageRepository:
             image_description,
         )
 
-    async def list_recent(self, *, conversation_id: str, limit: int) -> list[Message]:
+    async def delete_message(self, *, message_id: str) -> None:
+        await self._db.execute("delete from core.messages where id=$1", message_id)
+
+    async def list_recent(
+        self,
+        *,
+        conversation_id: str,
+        limit: int,
+        include_archived: bool = False,
+    ) -> list[Message]:
+        archived_filter = ""
+        if not include_archived:
+            archived_filter = "and not (coalesce(metadata, '{}'::jsonb) ? 'archived')"
+
         rows = await self._db.fetch(
-            """
+            f"""
             select *
             from core.messages
             where conversation_id=$1
+              {archived_filter}
             order by created_at desc
             limit $2
             """,
@@ -93,4 +121,3 @@ class MessageRepository:
             metadata=dict(row.get("metadata") or {}),
             created_at=row.get("created_at"),
         )
-

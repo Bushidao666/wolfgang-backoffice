@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 import pytest
 
 from modules.centurion.handlers.debounce_handler import DebounceWorker
@@ -6,6 +8,12 @@ from modules.centurion.handlers.debounce_handler import DebounceWorker
 class _Conv:
     def __init__(self, id: str):
         self.id = id
+
+
+class _Locks:
+    @asynccontextmanager
+    async def hold(self, *args, **kwargs):  # noqa: ARG002
+        yield True
 
 
 @pytest.mark.asyncio
@@ -35,6 +43,7 @@ async def test_tick_processes_each_due_conversation():
         return [_Conv("c1"), _Conv("c2")]
 
     worker._conversations = type("R", (), {"find_due_conversations": staticmethod(find_due_conversations)})()  # type: ignore[attr-defined]
+    worker._locks = _Locks()  # type: ignore[attr-defined]
 
     seen: list[tuple[str, str | None]] = []
 
@@ -44,4 +53,4 @@ async def test_tick_processes_each_due_conversation():
     worker._centurion = type("C", (), {"process_due_conversation": staticmethod(process_due_conversation)})()  # type: ignore[attr-defined]
 
     await worker._tick()  # noqa: SLF001
-    assert seen == [("c1", "c1"), ("c2", "c2")]
+    assert seen == [("c1", None), ("c2", None)]

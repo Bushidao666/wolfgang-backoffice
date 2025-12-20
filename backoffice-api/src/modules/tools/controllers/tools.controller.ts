@@ -6,13 +6,14 @@ import { UserRole } from "../../../common/enums/user-role.enum";
 import { CompanyGuard } from "../../../common/guards/company.guard";
 import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../../../common/guards/roles.guard";
+import { HoldingRoleGuard } from "../../auth/guards/holding-role.guard";
 import { CreateToolDto } from "../dto/create-tool.dto";
 import { ToolResponseDto } from "../dto/tool-response.dto";
 import { ToolsService } from "../services/tools.service";
 
 @ApiTags("Tools")
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard, CompanyGuard)
+@UseGuards(JwtAuthGuard, HoldingRoleGuard, RolesGuard, CompanyGuard)
 @Controller("centurions/:id/tools")
 export class ToolsController {
   constructor(private readonly tools: ToolsService) {}

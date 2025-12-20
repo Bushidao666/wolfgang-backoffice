@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     followup_poll_interval_s: float = Field(default=30.0, alias="FOLLOWUP_POLL_INTERVAL_S")
     cleanup_interval_s: float = Field(default=3600.0, alias="MEMORY_CLEANUP_INTERVAL_S")
 
+    debounce_lock_ttl_s: int = Field(default=180, alias="DEBOUNCE_LOCK_TTL_S")
+    debounce_lock_refresh_s: float = Field(default=30.0, alias="DEBOUNCE_LOCK_REFRESH_S")
+
+    watchdog_poll_interval_s: float = Field(default=10.0, alias="WATCHDOG_POLL_INTERVAL_S")
+    watchdog_stuck_after_s: int = Field(default=120, alias="WATCHDOG_STUCK_AFTER_S")
+    watchdog_batch_size: int = Field(default=50, alias="WATCHDOG_BATCH_SIZE")
+
     disable_connections: bool = Field(default=False, alias="DISABLE_CONNECTIONS")
     disable_workers: bool = Field(default=False, alias="DISABLE_WORKERS")
 

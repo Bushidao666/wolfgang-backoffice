@@ -6,12 +6,13 @@ import { UserRole } from "../../../common/enums/user-role.enum";
 import { CompanyGuard } from "../../../common/guards/company.guard";
 import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../../../common/guards/roles.guard";
+import { HoldingRoleGuard } from "../../auth/guards/holding-role.guard";
 import { TestCenturionDto } from "../dto/test-centurion.dto";
 import { CenturionTestService } from "../services/centurion-test.service";
 
 @ApiTags("Centurions")
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard, CompanyGuard)
+@UseGuards(JwtAuthGuard, HoldingRoleGuard, RolesGuard, CompanyGuard)
 @Controller("centurions")
 export class CenturionTestController {
   constructor(private readonly tester: CenturionTestService) {}

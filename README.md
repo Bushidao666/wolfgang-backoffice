@@ -71,6 +71,12 @@ Nota (Supabase DB): se algum serviço precisar de `SUPABASE_DB_URL` em produçã
 - Agent Runtime: `cd agent-runtime && poetry install && poetry run pytest`
 - OpenAPI: `npm -w @wolfgang/backoffice-api run openapi:generate`
 
+## Migrations (drift control)
+
+- Drift check (repo vs DB): `infra/db/migrations-check.sh`
+- Apply controlado: `infra/db/migrations-apply.sh`
+- Runbook: `docs/runbooks/runbook-migrations.md`
+
 ## Documentação
 
 - Backlog: `BACKLOG.md`, `BACKLOG_DETALHADO.md`
