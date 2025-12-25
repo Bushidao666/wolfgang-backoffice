@@ -7,22 +7,42 @@ export const OutboundTextMessageSchema = z.object({
   text: z.string().min(1),
 });
 
-export const OutboundMediaMessageSchema = z
-  .object({
-    type: z.enum(["image", "video", "audio", "document"]),
-    asset_id: z.string().uuid().optional(),
-    url: z.string().url().optional(),
-    mime_type: z.string().min(1).optional(),
-    caption: z.string().optional(),
-    filename: z.string().optional(),
-  })
-  .refine((m) => m.asset_id || m.url, { message: "asset_id or url is required" })
-  .refine((m) => m.asset_id || m.mime_type, { message: "mime_type is required when using url" });
+export const OutboundMediaMessageBaseSchema = z.object({
+  type: z.enum(["image", "video", "audio", "document"]),
+  asset_id: z.string().uuid().optional(),
+  url: z.string().url().optional(),
+  mime_type: z.string().min(1).optional(),
+  caption: z.string().optional(),
+  filename: z.string().optional(),
+});
 
-export const OutboundMessageSchema = z.discriminatedUnion("type", [
-  OutboundTextMessageSchema,
-  OutboundMediaMessageSchema,
-]);
+export const OutboundMediaMessageSchema = OutboundMediaMessageBaseSchema.refine(
+  (m) => m.asset_id || m.url,
+  { message: "asset_id or url is required" },
+).refine((m) => m.asset_id || m.mime_type, {
+  message: "mime_type is required when using url",
+});
+
+export const OutboundMessageSchema = z
+  .discriminatedUnion("type", [OutboundTextMessageSchema, OutboundMediaMessageBaseSchema])
+  .superRefine((message, ctx) => {
+    if (message.type === "text") return;
+
+    if (!message.asset_id && !message.url) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "asset_id or url is required",
+      });
+    }
+
+    if (message.url && !message.asset_id && !message.mime_type) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "mime_type is required when using url",
+        path: ["mime_type"],
+      });
+    }
+  });
 
 export const MessageSentPayloadSchema = z.object({
   instance_id: z.string().min(1),
