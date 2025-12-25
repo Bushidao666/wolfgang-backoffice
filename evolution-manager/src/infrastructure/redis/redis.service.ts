@@ -68,7 +68,12 @@ export class RedisService implements OnModuleDestroy {
     };
 
     this.subscriber.on("message", onMessage);
-    await this.subscriber.subscribe(channel);
+    try {
+      await this.subscriber.subscribe(channel);
+    } catch (err) {
+      this.subscriber.off("message", onMessage);
+      throw err;
+    }
 
     return async () => {
       await this.subscriber.unsubscribe(channel);

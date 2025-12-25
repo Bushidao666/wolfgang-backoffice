@@ -11,10 +11,13 @@ import { EvolutionApiService } from "../../instances/services/evolution-api.serv
 import { InstancesService } from "../../instances/services/instances.service";
 
 const MESSAGE_SENT_DEDUPE_TTL_S = 7 * 24 * 3600;
+const SUBSCRIBE_RETRY_BASE_DELAY_MS = 2000;
+const SUBSCRIBE_RETRY_MAX_DELAY_MS = 30000;
 
 @Injectable()
 export class MessagesSubscriber implements OnModuleInit, OnModuleDestroy {
   private unsubscribe?: () => Promise<void>;
+  private stopped = false;
 
   constructor(
     private readonly redis: RedisService,
@@ -30,8 +33,15 @@ export class MessagesSubscriber implements OnModuleInit, OnModuleDestroy {
     return this.supabase.getAdminClient();
   }
 
-  async onModuleInit() {
-    this.unsubscribe = await this.redis.subscribe(RedisChannels.MESSAGE_SENT, async (raw) => {
+  onModuleInit() {
+    void this.ensureSubscribed();
+  }
+
+  private async ensureSubscribed(): Promise<void> {
+    let attempt = 0;
+    while (!this.stopped) {
+      try {
+        this.unsubscribe = await this.redis.subscribe(RedisChannels.MESSAGE_SENT, async (raw) => {
       let json: unknown;
       try {
         json = JSON.parse(raw);
@@ -169,7 +179,26 @@ export class MessagesSubscriber implements OnModuleInit, OnModuleDestroy {
           });
         }
       }
-    });
+        });
+        return;
+      } catch (err) {
+        attempt += 1;
+        const delayMs = Math.min(
+          SUBSCRIBE_RETRY_BASE_DELAY_MS * 2 ** Math.min(6, attempt - 1),
+          SUBSCRIBE_RETRY_MAX_DELAY_MS,
+        );
+        this.logger.error("message_sent.redis_subscribe_failed", {
+          attempt,
+          delay_ms: delayMs,
+          error: err instanceof Error ? { message: err.message, stack: err.stack } : err,
+        });
+        await this.sleep(delayMs);
+      }
+    }
+  }
+
+  private async sleep(ms: number): Promise<void> {
+    await new Promise<void>((resolve) => setTimeout(resolve, ms));
   }
 
   private async resolveMediaMessage(
@@ -212,6 +241,7 @@ export class MessagesSubscriber implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
+    this.stopped = true;
     if (this.unsubscribe) {
       await this.unsubscribe();
     }
